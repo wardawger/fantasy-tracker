@@ -9,6 +9,61 @@ export default function Payments() {
   const [method, setMethod] = useState('Venmo');
   const [notes, setNotes] = useState('');
 
+  // Password protection
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+
+  const CORRECT_PASSWORD = 'Dtwd6080!';
+
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault();
+    if (passwordInput === CORRECT_PASSWORD) {
+      setIsAuthenticated(true);
+      setPasswordError(false);
+    } else {
+      setPasswordError(true);
+      setPasswordInput('');
+    }
+  };
+
+  // Show password prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-slate-800 p-8 rounded-lg border border-slate-700 w-full max-w-md">
+          <h2 className="text-2xl font-bold text-emerald-400 mb-4">🔒 Protected Page</h2>
+          <p className="text-slate-400 mb-6">Enter the password to access payment management.</p>
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm text-slate-400 mb-2">Password</label>
+              <input
+                type="password"
+                className="w-full bg-slate-900 border border-slate-700 rounded p-3 text-slate-100 focus:outline-none focus:border-emerald-500"
+                value={passwordInput}
+                onChange={(e) => {
+                  setPasswordInput(e.target.value);
+                  setPasswordError(false);
+                }}
+                placeholder="Enter password"
+                autoFocus
+              />
+              {passwordError && (
+                <p className="text-rose-500 text-sm mt-2">❌ Incorrect password. Please try again.</p>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 font-semibold rounded text-slate-900 transition"
+            >
+              Unlock
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) return <div className="text-emerald-400 text-center font-semibold">Loading data...</div>;
 
   const handleSubmit = async (e) => {
@@ -27,7 +82,15 @@ export default function Payments() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-emerald-400">Record Payments</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-emerald-400">Record Payments</h2>
+        <button
+          onClick={() => setIsAuthenticated(false)}
+          className="text-sm text-slate-400 hover:text-emerald-400 transition"
+        >
+          🔒 Lock Page
+        </button>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <form onSubmit={handleSubmit} className="bg-slate-800 p-6 rounded-lg border border-slate-700 h-fit space-y-4">
           <h3 className="font-semibold text-emerald-400">Add Payment Receipt</h3>
