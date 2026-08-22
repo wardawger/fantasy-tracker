@@ -13,6 +13,7 @@ export default function Payments() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState(false);
+  const [expandedPaymentId, setExpandedPaymentId] = useState(null);
 
   const CORRECT_PASSWORD = 'Dtwd6080!';
 
@@ -146,15 +147,68 @@ export default function Payments() {
                 </thead>
                 <tbody>
                   {payments.map(p => (
-                    <tr key={p.id} className="border-b border-slate-800">
-                      <td className="py-3">{p.date}</td>
-                      <td className="py-3 font-semibold">{p.member_name}</td>
-                      <td className="py-3 text-emerald-400 font-medium">${p.amount}</td>
-                      <td className="py-3"><span className="bg-slate-700 px-2 py-0.5 rounded text-xs">{p.method}</span></td>
-                      <td className="py-3">
-                        <button className="text-rose-500 hover:text-rose-450 hover:underline" onClick={() => deletePayment(p.id)}>Delete</button>
-                      </td>
-                    </tr>
+                    <React.Fragment key={p.id}>
+                      <tr
+                        className="border-b border-slate-800 hover:bg-slate-700/50 cursor-pointer transition"
+                        onClick={() => setExpandedPaymentId(expandedPaymentId === p.id ? null : p.id)}
+                      >
+                        <td className="py-3">{p.date}</td>
+                        <td className="py-3 font-semibold">{p.member_name}</td>
+                        <td className="py-3 text-emerald-400 font-medium">${p.amount}</td>
+                        <td className="py-3"><span className="bg-slate-700 px-2 py-0.5 rounded text-xs">{p.method}</span></td>
+                        <td className="py-3">
+                          <button
+                            className="text-rose-500 hover:text-rose-450 hover:underline mr-3"
+                            onClick={(e) => { e.stopPropagation(); deletePayment(p.id); }}
+                          >
+                            Delete
+                          </button>
+                          <span className="text-slate-500 text-xs">
+                            {expandedPaymentId === p.id ? '▼' : '▶'}
+                          </span>
+                        </td>
+                      </tr>
+                      {expandedPaymentId === p.id && (
+                        <tr className="bg-slate-700/30">
+                          <td colSpan="5" className="py-4 px-6">
+                            <div className="space-y-2 text-sm">
+                              <div className="flex items-start">
+                                <span className="text-slate-400 font-medium w-24">Payment ID:</span>
+                                <span className="text-slate-300 font-mono text-xs">{p.id}</span>
+                              </div>
+                              <div className="flex items-start">
+                                <span className="text-slate-400 font-medium w-24">Member:</span>
+                                <span className="text-slate-300">{p.member_name}</span>
+                              </div>
+                              <div className="flex items-start">
+                                <span className="text-slate-400 font-medium w-24">Amount:</span>
+                                <span className="text-emerald-400 font-semibold">${p.amount}</span>
+                              </div>
+                              <div className="flex items-start">
+                                <span className="text-slate-400 font-medium w-24">Date:</span>
+                                <span className="text-slate-300">{p.date}</span>
+                              </div>
+                              <div className="flex items-start">
+                                <span className="text-slate-400 font-medium w-24">Method:</span>
+                                <span className="text-slate-300">{p.method}</span>
+                              </div>
+                              {p.notes && (
+                                <div className="flex items-start">
+                                  <span className="text-slate-400 font-medium w-24">Notes:</span>
+                                  <span className="text-slate-300 italic">{p.notes}</span>
+                                </div>
+                              )}
+                              {!p.notes && (
+                                <div className="flex items-start">
+                                  <span className="text-slate-400 font-medium w-24">Notes:</span>
+                                  <span className="text-slate-500 italic">No notes provided</span>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

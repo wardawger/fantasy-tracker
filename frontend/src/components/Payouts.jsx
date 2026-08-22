@@ -13,7 +13,12 @@ export default function Payouts() {
     try {
       await refreshWeekResults(weekInput);
     } catch (err) {
-      alert("Error fetching week data. Check connection and try again.");
+      const errorMessage = err.response?.data?.error || err.message;
+      if (errorMessage.includes('Incomplete scores')) {
+        alert(`Week ${weekInput} data not available yet. Scores may not be complete or the week hasn't been played. Try a different week or wait until the week completes.`);
+      } else {
+        alert(`Error fetching week data: ${errorMessage}`);
+      }
     } finally {
       setSyncing(false);
     }
