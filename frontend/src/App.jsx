@@ -4,6 +4,7 @@ import { LeagueProvider } from './context/LeagueContext';
 import Dashboard from './components/Dashboard';
 import Payments from './components/Payments';
 import Payouts from './components/Payouts';
+import RedraftBonuses from './components/RedraftBonuses';
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
                 <Link to="/" className="hover:text-emerald-400 transition">Dashboard</Link>
                 <Link to="/payments" className="hover:text-emerald-400 transition">Payments</Link>
                 <Link to="/payouts" className="hover:text-emerald-400 transition">Payout Ledger</Link>
+                <Link to="/bonuses" className="hover:text-emerald-400 transition">Redraft Bonuses</Link>
               </nav>
             </div>
           </header>
@@ -25,6 +27,7 @@ export default function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/payments" element={<Payments />} />
               <Route path="/payouts" element={<Payouts />} />
+              <Route path="/bonuses" element={<RedraftBonuses />} />
             </Routes>
           </main>
         </div>
