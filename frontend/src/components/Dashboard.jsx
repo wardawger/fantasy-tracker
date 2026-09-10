@@ -51,17 +51,15 @@ export default function Dashboard() {
             <thead>
               <tr className="border-b border-slate-700 text-slate-400">
                 <th className="py-2">Team Owner</th>
-                <th className="py-2">Paid</th>
-                <th className="py-2">Dues Status</th>
-                <th className="py-2">Survivor</th>
-                <th className="py-2">Chopped</th>
+                <th className="py-2">Dues Status ($250)</th>
+                <th className="py-2">Survivor ($50)</th>
+                <th className="py-2">Chopped ($25)</th>
               </tr>
             </thead>
             <tbody>
               {members.map(m => (
                 <tr key={m.id} className="border-b border-slate-800">
                   <td className="py-3 font-semibold">{m.name}</td>
-                  <td className="py-3">${m.total_paid || 0}</td>
                   <td className="py-3">
                     {m.total_paid >= 250 ? (
                       <span className="bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full text-xs font-medium">Fully Paid</span>

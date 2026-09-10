@@ -86,8 +86,8 @@ export default function Payouts() {
               <th className="py-2">Dues Paid</th>
               <th className="py-2">Weekly Earnings</th>
               <th className="py-2">Net Balance</th>
-              <th className="py-2">Survivor</th>
-              <th className="py-2">Chopped</th>
+              <th className="py-2">Survivor ($50)</th>
+              <th className="py-2">Chopped ($25)</th>
             </tr>
           </thead>
           <tbody>
