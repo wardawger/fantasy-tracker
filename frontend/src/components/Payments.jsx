@@ -25,6 +25,7 @@ export default function Payments() {
   const [editDate, setEditDate] = useState('');
   const [editMethod, setEditMethod] = useState('Venmo');
   const [editNotes, setEditNotes] = useState('');
+  const [editVenmoInput, setEditVenmoInput] = useState('');
 
   const CORRECT_PASSWORD = 'Dtwd6080!';
 
@@ -100,6 +101,7 @@ export default function Payments() {
     setEditDate(p.date);
     setEditMethod(p.method);
     setEditNotes(p.notes || '');
+    setEditVenmoInput(members.find(m => m.id === p.member_id)?.venmo_username || '');
   };
 
   const cancelEdit = () => setEditingPaymentId(null);
@@ -289,6 +291,17 @@ export default function Payments() {
                                   />
                                   Chopped
                                 </label>
+                              </div>
+                              <div>
+                                <label className="block text-slate-400 mb-1">Venmo Username</label>
+                                <input
+                                  type="text"
+                                  placeholder="e.g. john-smith-42"
+                                  className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-100"
+                                  value={editVenmoInput}
+                                  onChange={e => setEditVenmoInput(e.target.value)}
+                                  onBlur={() => setVenmoUsername(p.member_id, editVenmoInput.trim())}
+                                />
                               </div>
                               <div>
                                 <label className="block text-slate-400 mb-1">Amount</label>
