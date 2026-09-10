@@ -1,6 +1,24 @@
 import React, { useContext } from 'react';
 import { LeagueContext } from '../context/LeagueContext';
 
+const LEAGUE_DUES = { survivor: 50, chopped: 25 };
+
+function LeagueStatusBadge({ member, league }) {
+  const optedIn = league === 'survivor' ? member.survivor_opted_in : member.chopped_opted_in;
+  const paid = league === 'survivor' ? member.survivor_paid : member.chopped_paid;
+
+  if (!optedIn) {
+    return <span className="bg-slate-700 text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium">Not Participating</span>;
+  }
+  if (paid >= LEAGUE_DUES[league]) {
+    return <span className="bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full text-xs font-medium">Paid</span>;
+  }
+  if (paid > 0) {
+    return <span className="bg-yellow-500/20 text-yellow-400 px-2.5 py-0.5 rounded-full text-xs font-medium">Partially Paid</span>;
+  }
+  return <span className="bg-red-500/20 text-red-400 px-2.5 py-0.5 rounded-full text-xs font-medium">Unpaid</span>;
+}
+
 export default function Dashboard() {
   const { members, weekly, loading } = useContext(LeagueContext);
 
@@ -35,6 +53,8 @@ export default function Dashboard() {
                 <th className="py-2">Team Owner</th>
                 <th className="py-2">Paid</th>
                 <th className="py-2">Dues Status</th>
+                <th className="py-2">Survivor</th>
+                <th className="py-2">Chopped</th>
               </tr>
             </thead>
             <tbody>
@@ -51,6 +71,8 @@ export default function Dashboard() {
                       <span className="bg-red-500/20 text-red-400 px-2.5 py-0.5 rounded-full text-xs font-medium">Unpaid</span>
                     )}
                   </td>
+                  <td className="py-3"><LeagueStatusBadge member={m} league="survivor" /></td>
+                  <td className="py-3"><LeagueStatusBadge member={m} league="chopped" /></td>
                 </tr>
               ))}
             </tbody>
