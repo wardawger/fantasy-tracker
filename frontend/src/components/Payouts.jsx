@@ -5,15 +5,36 @@ import SortableTh from './SortableTh';
 
 const LEAGUE_DUES = { survivor: 50, chopped: 25 };
 
-function venmoPayLink(username, amount, note) {
+function venmoWebLink(username, amount, note) {
   return `https://venmo.com/${encodeURIComponent(username)}?txn=pay&amount=${amount}&note=${encodeURIComponent(note)}`;
+}
+
+function venmoAppLink(username, amount, note) {
+  return `venmo://paycharge?txn=pay&recipients=${encodeURIComponent(username)}&amount=${amount}&note=${encodeURIComponent(note)}`;
+}
+
+function isMobileDevice() {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 }
 
 function VenmoPayButton({ username, amount, note }) {
   if (!username) return null;
+
+  const handleClick = (e) => {
+    if (!isMobileDevice()) return;
+    e.preventDefault();
+    window.location.href = venmoAppLink(username, amount, note);
+    // If the Venmo app isn't installed, this fires after the attempt above;
+    // if it did open, the page loses focus and the timer never resolves this navigation.
+    setTimeout(() => {
+      window.location.href = venmoWebLink(username, amount, note);
+    }, 1500);
+  };
+
   return (
     <a
-      href={venmoPayLink(username, amount, note)}
+      href={venmoWebLink(username, amount, note)}
+      onClick={handleClick}
       target="_blank"
       rel="noopener noreferrer"
       className="inline-flex items-center justify-center gap-1 bg-[#3D95CE] hover:bg-[#3483B5] font-semibold px-3 py-1 rounded text-white text-sm whitespace-nowrap"
