@@ -10,7 +10,7 @@ function LeagueStatusBadge({ member, league }) {
   const paid = league === 'survivor' ? member.survivor_paid : member.chopped_paid;
 
   if (!optedIn) {
-    return <span className="bg-slate-700 text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium">Not Participating</span>;
+    return <span className="bg-slate-700 text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium">Opted Out</span>;
   }
   if (paid >= LEAGUE_DUES[league]) {
     return <span className="bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full text-xs font-medium">Paid</span>;
