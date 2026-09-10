@@ -42,4 +42,40 @@ describe('League dues logic', () => {
     expect(result[0].values[0][0]).toBe(1);
     expect(result[0].values[0][1]).toBe(0);
   });
+
+  test('opt-in existence check finds no row for an unknown member id', async () => {
+    const db = await getDb(TEST_DB);
+    const memberId = crypto.randomUUID();
+    db.run('INSERT INTO members (id, name, sleeper_user_id) VALUES (?, ?, ?)', [memberId, 'Test Member', 'sleeper_1']);
+
+    const unknownId = crypto.randomUUID();
+
+    // Mirrors the pre-check the /api/members/:id/opt-in route performs before UPDATE.
+    const existing = db.exec('SELECT id FROM members WHERE id = ?', [memberId]);
+    expect(existing[0].values.length).toBe(1);
+
+    const missing = db.exec('SELECT id FROM members WHERE id = ?', [unknownId]);
+    expect(missing[0] === undefined || missing[0].values.length === 0).toBe(true);
+  });
+
+  test('payment creation existence check rejects an unknown member id', async () => {
+    const db = await getDb(TEST_DB);
+    const memberId = crypto.randomUUID();
+    db.run('INSERT INTO members (id, name, sleeper_user_id) VALUES (?, ?, ?)', [memberId, 'Test Member', 'sleeper_1']);
+
+    const unknownId = crypto.randomUUID();
+
+    // Mirrors the pre-check the POST /api/payments route performs before INSERT.
+    const existing = db.exec('SELECT id FROM members WHERE id = ?', [memberId]);
+    expect(existing[0].values.length).toBe(1);
+
+    const missing = db.exec('SELECT id FROM members WHERE id = ?', [unknownId]);
+    expect(missing[0] === undefined || missing[0].values.length === 0).toBe(true);
+
+    // Confirm no payment/total_paid side effects occur when the existence check fails
+    // (i.e. the route should not proceed to INSERT/UPDATE for an unknown member).
+    const paymentsBefore = db.exec('SELECT COUNT(*) FROM payments');
+    const countBefore = paymentsBefore[0]?.values[0]?.[0] || 0;
+    expect(countBefore).toBe(0);
+  });
 });

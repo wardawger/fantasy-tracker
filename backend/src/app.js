@@ -79,6 +79,11 @@ app.post('/api/members/:id/opt-in', async (req, res) => {
   const column = league === 'survivor' ? 'survivor_opted_in' : 'chopped_opted_in';
 
   try {
+    const memberResult = db.exec('SELECT id FROM members WHERE id = ?', [id]);
+    if (!memberResult[0] || memberResult[0].values.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
     db.run(`UPDATE members SET ${column} = ? WHERE id = ?`, [optedIn ? 1 : 0, id]);
     saveDb();
     res.json({ success: true });
@@ -93,6 +98,11 @@ app.post('/api/payments', async (req, res) => {
   const db = await getDb();
 
   try {
+    const memberResult = db.exec('SELECT id FROM members WHERE id = ?', [memberId]);
+    if (!memberResult[0] || memberResult[0].values.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
     const id = crypto.randomUUID();
     db.run('INSERT INTO payments (id, member_id, amount, date, method, notes, league) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [id, memberId, amount, date, method, notes || '', resolvedLeague]);
