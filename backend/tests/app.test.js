@@ -121,4 +121,40 @@ describe('League dues logic', () => {
     expect(outcomeEmpty.rejected).toBe(false);
     expect(outcomeEmpty.resolvedLeague).toBe('main');
   });
+
+  test('editing a payment recalculates total_paid scoped to main league', async () => {
+    const db = await getDb(TEST_DB);
+    const memberId = crypto.randomUUID();
+    db.run('INSERT INTO members (id, name, sleeper_user_id) VALUES (?, ?, ?)', [memberId, 'Test Member', 'sleeper_1']);
+
+    const paymentId = crypto.randomUUID();
+    db.run('INSERT INTO payments (id, member_id, amount, date, method, notes, league) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [paymentId, memberId, 100, '2026-01-01', 'Venmo', '', 'main']);
+    db.run('UPDATE members SET total_paid = 100 WHERE id = ?', [memberId]);
+
+    // Simulates PUT /api/payments/:id changing amount and league from main -> survivor.
+    db.run('UPDATE payments SET amount = ?, date = ?, method = ?, notes = ?, league = ? WHERE id = ?',
+      [50, '2026-01-05', 'Cash', 'corrected', 'survivor', paymentId]);
+
+    const sumResult = db.exec("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE member_id = ? AND league = 'main'", [memberId]);
+    const totalPaid = sumResult[0]?.values[0]?.[0] || 0;
+    db.run('UPDATE members SET total_paid = ? WHERE id = ?', [totalPaid, memberId]);
+
+    // Moving the payment out of 'main' drops it from total_paid entirely.
+    const memberAfter = db.exec('SELECT total_paid FROM members WHERE id = ?', [memberId]);
+    expect(memberAfter[0].values[0][0]).toBe(0);
+
+    const updatedPayment = db.exec('SELECT amount, date, method, notes, league FROM payments WHERE id = ?', [paymentId]);
+    const [amount, date, method, notes, league] = updatedPayment[0].values[0];
+    expect({ amount, date, method, notes, league }).toEqual({ amount: 50, date: '2026-01-05', method: 'Cash', notes: 'corrected', league: 'survivor' });
+  });
+
+  test('editing an unknown payment id would be rejected before any UPDATE', async () => {
+    const db = await getDb(TEST_DB);
+    const unknownId = crypto.randomUUID();
+
+    // Mirrors the pre-check the PUT /api/payments/:id route performs before UPDATE.
+    const existing = db.exec('SELECT member_id, league FROM payments WHERE id = ?', [unknownId]);
+    expect(existing[0] === undefined || existing[0].values.length === 0).toBe(true);
+  });
 });

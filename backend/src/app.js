@@ -124,6 +124,40 @@ app.post('/api/payments', async (req, res) => {
   }
 });
 
+app.put('/api/payments/:id', async (req, res) => {
+  const { id } = req.params;
+  const { amount, date, method, notes, league } = req.body;
+
+  if (league !== undefined && league !== null && league !== '' && LEAGUE_DUES[league] === undefined) {
+    return res.status(400).json({ error: 'league must be main, survivor, or chopped' });
+  }
+
+  const db = await getDb();
+
+  try {
+    const paymentResult = db.exec('SELECT member_id, league FROM payments WHERE id = ?', [id]);
+    if (!paymentResult[0] || paymentResult[0].values.length === 0) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    const [memberId, existingLeague] = paymentResult[0].values[0];
+    const resolvedLeague = league && LEAGUE_DUES[league] !== undefined ? league : existingLeague;
+
+    db.run('UPDATE payments SET amount = ?, date = ?, method = ?, notes = ?, league = ? WHERE id = ?',
+      [amount, date, method, notes || '', resolvedLeague, id]);
+
+    const sumResult = db.exec("SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE member_id = ? AND league = 'main'", [memberId]);
+    const totalPaid = sumResult[0]?.values[0]?.[0] || 0;
+
+    db.run('UPDATE members SET total_paid = ? WHERE id = ?', [totalPaid, memberId]);
+    saveDb();
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/payments', async (req, res) => {
   const db = await getDb();
   const result = db.exec(`

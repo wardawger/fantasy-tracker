@@ -5,7 +5,7 @@ const LEAGUE_DUES = { main: 250, survivor: 50, chopped: 25 };
 const LEAGUE_LABELS = { main: 'Main League ($250)', survivor: 'Survivor ($50)', chopped: 'Chopped ($25)' };
 
 export default function Payments() {
-  const { members, payments, addPayment, deletePayment, optIn, loading } = useContext(LeagueContext);
+  const { members, payments, addPayment, deletePayment, updatePayment, optIn, loading } = useContext(LeagueContext);
   const [memberId, setMemberId] = useState('');
   const [amount, setAmount] = useState('');
   const [league, setLeague] = useState('main');
@@ -18,6 +18,12 @@ export default function Payments() {
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState(false);
   const [expandedPaymentId, setExpandedPaymentId] = useState(null);
+  const [editingPaymentId, setEditingPaymentId] = useState(null);
+  const [editAmount, setEditAmount] = useState('');
+  const [editLeague, setEditLeague] = useState('main');
+  const [editDate, setEditDate] = useState('');
+  const [editMethod, setEditMethod] = useState('Venmo');
+  const [editNotes, setEditNotes] = useState('');
 
   const CORRECT_PASSWORD = 'Dtwd6080!';
 
@@ -84,6 +90,29 @@ export default function Payments() {
     });
     setAmount('');
     setNotes('');
+  };
+
+  const startEdit = (p) => {
+    setEditingPaymentId(p.id);
+    setEditAmount(String(p.amount));
+    setEditLeague(p.league);
+    setEditDate(p.date);
+    setEditMethod(p.method);
+    setEditNotes(p.notes || '');
+  };
+
+  const cancelEdit = () => setEditingPaymentId(null);
+
+  const handleEditSave = async (id) => {
+    if (!editAmount) return alert('Enter an amount');
+    await updatePayment(id, {
+      amount: parseFloat(editAmount),
+      date: editDate,
+      method: editMethod,
+      notes: editNotes,
+      league: editLeague
+    });
+    setEditingPaymentId(null);
   };
 
   return (
@@ -201,6 +230,12 @@ export default function Payments() {
                         <td className="py-3"><span className="bg-slate-700 px-2 py-0.5 rounded text-xs">{p.method}</span></td>
                         <td className="py-3">
                           <button
+                            className="text-emerald-400 hover:text-emerald-300 hover:underline mr-3"
+                            onClick={(e) => { e.stopPropagation(); startEdit(p); setExpandedPaymentId(p.id); }}
+                          >
+                            Edit
+                          </button>
+                          <button
                             className="text-rose-500 hover:text-rose-450 hover:underline mr-3"
                             onClick={(e) => { e.stopPropagation(); deletePayment(p.id); }}
                           >
@@ -211,7 +246,59 @@ export default function Payments() {
                           </span>
                         </td>
                       </tr>
-                      {expandedPaymentId === p.id && (
+                      {expandedPaymentId === p.id && editingPaymentId === p.id && (
+                        <tr className="bg-slate-700/30">
+                          <td colSpan="6" className="py-4 px-6">
+                            <div className="space-y-3 text-sm max-w-sm">
+                              <div>
+                                <label className="block text-slate-400 mb-1">Amount</label>
+                                <input type="number" step="any" className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-100" value={editAmount} onChange={e => setEditAmount(e.target.value)} />
+                              </div>
+                              <div>
+                                <label className="block text-slate-400 mb-1">League</label>
+                                <select className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-100" value={editLeague} onChange={e => setEditLeague(e.target.value)}>
+                                  {Object.keys(LEAGUE_DUES).map(l => (
+                                    <option key={l} value={l}>{LEAGUE_LABELS[l]}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-slate-400 mb-1">Payment Method</label>
+                                <select className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-100" value={editMethod} onChange={e => setEditMethod(e.target.value)}>
+                                  <option value="Venmo">Venmo</option>
+                                  <option value="Cash">Cash</option>
+                                  <option value="Zelle">Zelle</option>
+                                  <option value="Check">Check</option>
+                                  <option value="Other">Other</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-slate-400 mb-1">Payment Date</label>
+                                <input type="date" className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-100" value={editDate} onChange={e => setEditDate(e.target.value)} />
+                              </div>
+                              <div>
+                                <label className="block text-slate-400 mb-1">Commentary / Notes</label>
+                                <textarea className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-100" value={editNotes} onChange={e => setEditNotes(e.target.value)}></textarea>
+                              </div>
+                              <div className="flex gap-3">
+                                <button
+                                  className="py-2 px-4 bg-emerald-500 hover:bg-emerald-600 font-semibold rounded text-slate-900 transition"
+                                  onClick={() => handleEditSave(p.id)}
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  className="py-2 px-4 bg-slate-700 hover:bg-slate-600 font-semibold rounded text-slate-100 transition"
+                                  onClick={cancelEdit}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      {expandedPaymentId === p.id && editingPaymentId !== p.id && (
                         <tr className="bg-slate-700/30">
                           <td colSpan="6" className="py-4 px-6">
                             <div className="space-y-2 text-sm">
