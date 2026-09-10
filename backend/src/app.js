@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { getDb, saveDb } from './database.js';
+import { getDb, saveDb, getStorageMode } from './database.js';
 import { fetchUsers, fetchRosters, fetchWeeklyMatchups, fetchWinnersBracket } from './sleeper.js';
 import crypto from 'crypto';
 
@@ -37,6 +37,15 @@ async function attachLeaguePaidTotals(db, members) {
   }
   return members;
 }
+
+app.get('/api/debug/storage', async (req, res) => {
+  await getDb();
+  res.json({
+    mode: getStorageMode(),
+    tursoUrlSet: !!process.env.TURSO_DATABASE_URL,
+    tursoTokenSet: !!process.env.TURSO_AUTH_TOKEN
+  });
+});
 
 // Initialize Members if table empty
 app.get('/api/sync-members', async (req, res) => {
