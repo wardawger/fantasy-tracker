@@ -3,6 +3,24 @@ import { LeagueContext } from '../context/LeagueContext';
 
 const LEAGUE_DUES = { survivor: 50, chopped: 25 };
 
+function venmoPayLink(username, amount, note) {
+  return `https://venmo.com/${encodeURIComponent(username)}?txn=pay&amount=${amount}&note=${encodeURIComponent(note)}`;
+}
+
+function VenmoPayButton({ username, amount, note }) {
+  if (!username) return null;
+  return (
+    <a
+      href={venmoPayLink(username, amount, note)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-block bg-emerald-500 hover:bg-emerald-600 font-semibold px-2 py-0.5 rounded text-slate-900 text-xs ml-2"
+    >
+      Pay via Venmo
+    </a>
+  );
+}
+
 function LeagueStatusBadge({ member, league }) {
   const optedIn = league === 'survivor' ? member.survivor_opted_in : member.chopped_opted_in;
   const paid = league === 'survivor' ? member.survivor_paid : member.chopped_paid;
@@ -137,6 +155,7 @@ export default function Payouts() {
           <tbody>
             {['survivor', 'chopped'].map(league => {
               const champion = championByLeague[league];
+              const winnerMember = champion?.decided ? members.find(m => m.sleeper_user_id === champion.winner_user_id) : null;
               return (
                 <tr key={league} className="border-b border-slate-800">
                   <td className="py-3 font-semibold capitalize">{league}</td>
@@ -158,6 +177,9 @@ export default function Payouts() {
                     >
                       {syncingChampion === league ? 'Checking...' : 'Check for Winner'}
                     </button>
+                    {champion?.decided && (
+                      <VenmoPayButton username={winnerMember?.venmo_username} amount={champion.payout} note={`${league} champion payout`} />
+                    )}
                   </td>
                 </tr>
               );
@@ -180,13 +202,23 @@ export default function Payouts() {
               </tr>
             </thead>
             <tbody>
-              {weekly.map(w => (
-                <tr key={w.id} className="border-b border-slate-800">
-                  <td className="py-3 font-semibold">Week {w.week}</td>
-                  <td className="py-3">{w.first_name} ({w.first_points.toFixed(2)} pts)</td>
-                  <td className="py-3">{w.second_name} ({w.second_points.toFixed(2)} pts)</td>
-                </tr>
-              ))}
+              {weekly.map(w => {
+                const firstMember = members.find(m => m.sleeper_user_id === w.first_user_id);
+                const secondMember = members.find(m => m.sleeper_user_id === w.second_user_id);
+                return (
+                  <tr key={w.id} className="border-b border-slate-800">
+                    <td className="py-3 font-semibold">Week {w.week}</td>
+                    <td className="py-3">
+                      {w.first_name} ({w.first_points.toFixed(2)} pts)
+                      <VenmoPayButton username={firstMember?.venmo_username} amount={w.first_payout} note={`Week ${w.week} Redraft - 1st place`} />
+                    </td>
+                    <td className="py-3">
+                      {w.second_name} ({w.second_points.toFixed(2)} pts)
+                      <VenmoPayButton username={secondMember?.venmo_username} amount={w.second_payout} note={`Week ${w.week} Redraft - 2nd place`} />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

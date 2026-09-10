@@ -193,4 +193,28 @@ describe('League dues logic', () => {
     expect(oneAlive.length).toBe(1);
     expect(memberNameByUserId.get(oneAlive[0].owner_id)).toBe('Member B');
   });
+
+  test('venmo username can be set and cleared on a member', async () => {
+    const db = await getDb(TEST_DB);
+    const memberId = crypto.randomUUID();
+    await db.run('INSERT INTO members (id, name, sleeper_user_id) VALUES (?, ?, ?)', [memberId, 'Test Member', 'sleeper_1']);
+
+    await db.run('UPDATE members SET venmo_username = ? WHERE id = ?', ['test-venmo', memberId]);
+    const withUsername = await db.exec('SELECT venmo_username FROM members WHERE id = ?', [memberId]);
+    expect(withUsername[0].values[0][0]).toBe('test-venmo');
+
+    // Mirrors POST /api/members/:id/venmo clearing the field when venmoUsername is falsy.
+    await db.run('UPDATE members SET venmo_username = ? WHERE id = ?', [null, memberId]);
+    const cleared = await db.exec('SELECT venmo_username FROM members WHERE id = ?', [memberId]);
+    expect(cleared[0].values[0][0]).toBe(null);
+  });
+
+  test('venmo update existence check rejects an unknown member id', async () => {
+    const db = await getDb(TEST_DB);
+    const unknownId = crypto.randomUUID();
+
+    // Mirrors the pre-check the POST /api/members/:id/venmo route performs before UPDATE.
+    const existing = await db.exec('SELECT id FROM members WHERE id = ?', [unknownId]);
+    expect(existing[0] === undefined || existing[0].values.length === 0).toBe(true);
+  });
 });

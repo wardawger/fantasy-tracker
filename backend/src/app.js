@@ -24,7 +24,8 @@ function mapMemberRow(row) {
     total_owed: row[3],
     total_paid: row[4],
     survivor_opted_in: !!row[5],
-    chopped_opted_in: !!row[6]
+    chopped_opted_in: !!row[6],
+    venmo_username: row[7]
   };
 }
 
@@ -54,7 +55,7 @@ app.get('/api/sync-members', async (req, res) => {
       }
       saveDb();
     }
-    const listResult = await db.exec('SELECT id, name, sleeper_user_id, total_owed, total_paid, survivor_opted_in, chopped_opted_in FROM members');
+    const listResult = await db.exec('SELECT id, name, sleeper_user_id, total_owed, total_paid, survivor_opted_in, chopped_opted_in, venmo_username FROM members');
     const members = await attachLeaguePaidTotals(db, (listResult[0]?.values.map(mapMemberRow)) || []);
     res.json(members);
   } catch (err) {
@@ -64,7 +65,7 @@ app.get('/api/sync-members', async (req, res) => {
 
 app.get('/api/members', async (req, res) => {
   const db = await getDb();
-  const result = await db.exec('SELECT id, name, sleeper_user_id, total_owed, total_paid, survivor_opted_in, chopped_opted_in FROM members');
+  const result = await db.exec('SELECT id, name, sleeper_user_id, total_owed, total_paid, survivor_opted_in, chopped_opted_in, venmo_username FROM members');
   const members = await attachLeaguePaidTotals(db, (result[0]?.values.map(mapMemberRow)) || []);
   res.json(members);
 });
@@ -87,6 +88,26 @@ app.post('/api/members/:id/opt-in', async (req, res) => {
     }
 
     await db.run(`UPDATE members SET ${column} = ? WHERE id = ?`, [optedIn ? 1 : 0, id]);
+    saveDb();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/members/:id/venmo', async (req, res) => {
+  const { id } = req.params;
+  const { venmoUsername } = req.body;
+
+  const db = await getDb();
+
+  try {
+    const memberResult = await db.exec('SELECT id FROM members WHERE id = ?', [id]);
+    if (!memberResult[0] || memberResult[0].values.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    await db.run('UPDATE members SET venmo_username = ? WHERE id = ?', [venmoUsername || null, id]);
     saveDb();
     res.json({ success: true });
   } catch (err) {

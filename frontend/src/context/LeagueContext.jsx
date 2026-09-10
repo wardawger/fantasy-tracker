@@ -51,6 +51,11 @@ export const LeagueProvider = ({ children }) => {
     await refreshData();
   };
 
+  const setVenmoUsername = async (memberId, venmoUsername) => {
+    await axios.post(`${API_BASE}/api/members/${memberId}/venmo`, { venmoUsername });
+    await refreshData();
+  };
+
   const refreshWeekResults = async (week) => {
     await axios.get(`${API_BASE}/api/refresh/weekly/${week}`);
     await refreshData();
@@ -67,7 +72,7 @@ export const LeagueProvider = ({ children }) => {
 
   return (
     <LeagueContext.Provider value={{
-      members, payments, weekly, champions, loading, refreshData, addPayment, deletePayment, updatePayment, optIn, refreshWeekResults, refreshChampion
+      members, payments, weekly, champions, loading, refreshData, addPayment, deletePayment, updatePayment, optIn, setVenmoUsername, refreshWeekResults, refreshChampion
     }}>
       {children}
     </LeagueContext.Provider>

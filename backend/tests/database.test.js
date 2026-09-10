@@ -79,4 +79,12 @@ describe('Database Tests', () => {
     expect(result[0].values.length).toBe(1);
     expect(result[0].values[0]).toEqual(['Test Member', 500, 1]);
   });
+
+  test('should have venmo_username column on members defaulting to null', async () => {
+    const db = await getDb(TEST_DB);
+    await db.run('INSERT INTO members (id, name, sleeper_user_id) VALUES (?, ?, ?)', ['1', 'Test Member', 'sleeper_1']);
+
+    const result = await db.exec('SELECT venmo_username FROM members WHERE id = ?', ['1']);
+    expect(result[0].values[0][0]).toBe(null);
+  });
 });

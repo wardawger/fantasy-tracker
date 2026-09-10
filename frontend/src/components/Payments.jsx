@@ -5,8 +5,9 @@ const LEAGUE_DUES = { main: 250, survivor: 50, chopped: 25 };
 const LEAGUE_LABELS = { main: 'Main League ($250)', survivor: 'Survivor ($50)', chopped: 'Chopped ($25)' };
 
 export default function Payments() {
-  const { members, payments, addPayment, deletePayment, updatePayment, optIn, loading } = useContext(LeagueContext);
+  const { members, payments, addPayment, deletePayment, updatePayment, optIn, setVenmoUsername, loading } = useContext(LeagueContext);
   const [memberId, setMemberId] = useState('');
+  const [venmoInput, setVenmoInput] = useState('');
   const [amount, setAmount] = useState('');
   const [league, setLeague] = useState('main');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -131,7 +132,15 @@ export default function Payments() {
           <h3 className="font-semibold text-emerald-400">Add Payment Receipt</h3>
           <div>
             <label className="block text-sm text-slate-400 mb-1">Select Member</label>
-            <select className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-100" value={memberId} onChange={e => setMemberId(e.target.value)}>
+            <select
+              className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-100"
+              value={memberId}
+              onChange={e => {
+                const newMemberId = e.target.value;
+                setMemberId(newMemberId);
+                setVenmoInput(members.find(m => m.id === newMemberId)?.venmo_username || '');
+              }}
+            >
               <option value="">-- Choose member --</option>
               {members.map(m => (
                 <option key={m.id} value={m.id}>{m.name}</option>
@@ -139,24 +148,37 @@ export default function Payments() {
             </select>
           </div>
           {memberId && (
-            <div className="flex gap-4 text-sm">
-              <label className="flex items-center gap-2 text-slate-300">
+            <>
+              <div className="flex gap-4 text-sm">
+                <label className="flex items-center gap-2 text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={!!members.find(m => m.id === memberId)?.survivor_opted_in}
+                    onChange={e => optIn(memberId, 'survivor', e.target.checked)}
+                  />
+                  Survivor
+                </label>
+                <label className="flex items-center gap-2 text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={!!members.find(m => m.id === memberId)?.chopped_opted_in}
+                    onChange={e => optIn(memberId, 'chopped', e.target.checked)}
+                  />
+                  Chopped
+                </label>
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Venmo Username</label>
                 <input
-                  type="checkbox"
-                  checked={!!members.find(m => m.id === memberId)?.survivor_opted_in}
-                  onChange={e => optIn(memberId, 'survivor', e.target.checked)}
+                  type="text"
+                  placeholder="e.g. john-smith-42"
+                  className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-100"
+                  value={venmoInput}
+                  onChange={e => setVenmoInput(e.target.value)}
+                  onBlur={() => setVenmoUsername(memberId, venmoInput.trim())}
                 />
-                Survivor
-              </label>
-              <label className="flex items-center gap-2 text-slate-300">
-                <input
-                  type="checkbox"
-                  checked={!!members.find(m => m.id === memberId)?.chopped_opted_in}
-                  onChange={e => optIn(memberId, 'chopped', e.target.checked)}
-                />
-                Chopped
-              </label>
-            </div>
+              </div>
+            </>
           )}
           <div>
             <label className="block text-sm text-slate-400 mb-1">League</label>

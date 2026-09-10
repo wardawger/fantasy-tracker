@@ -110,6 +110,7 @@ async function initDB(db) {
   await addColumnIfMissing(db, 'payments', 'league', "TEXT NOT NULL DEFAULT 'main'");
   await addColumnIfMissing(db, 'members', 'survivor_opted_in', 'INTEGER NOT NULL DEFAULT 0');
   await addColumnIfMissing(db, 'members', 'chopped_opted_in', 'INTEGER NOT NULL DEFAULT 0');
+  await addColumnIfMissing(db, 'members', 'venmo_username', 'TEXT');
 }
 
 async function addColumnIfMissing(db, table, column, definition) {
