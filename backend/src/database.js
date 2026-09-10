@@ -64,6 +64,20 @@ function initDB(sqliteDb) {
       UNIQUE(league, week)
     );
   `);
+
+  addColumnIfMissing(sqliteDb, 'payments', 'league', "TEXT NOT NULL DEFAULT 'main'");
+  addColumnIfMissing(sqliteDb, 'members', 'survivor_opted_in', 'INTEGER NOT NULL DEFAULT 0');
+  addColumnIfMissing(sqliteDb, 'members', 'chopped_opted_in', 'INTEGER NOT NULL DEFAULT 0');
+}
+
+function addColumnIfMissing(sqliteDb, table, column, definition) {
+  try {
+    sqliteDb.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  } catch (err) {
+    if (!/duplicate column name/i.test(err.message)) {
+      throw err;
+    }
+  }
 }
 
 export function saveDb() {
