@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import { LeagueContext } from '../context/LeagueContext';
 import { useSortableData } from '../hooks/useSortableData';
 import SortableTh from './SortableTh';
@@ -93,6 +93,45 @@ export default function Payouts() {
 
   const { items: sortedPayouts, sortKey: payoutsSortKey, sortDirection: payoutsSortDirection, requestSort: requestPayoutsSort } = useSortableData(compiledPayouts, 'name', 'asc');
 
+  // Calculate season-long bonus leaders
+  const bonusLeaders = useMemo(() => {
+    // Highest Single Week Score
+    const highestWeekScore = weekly.reduce((highest, week) => {
+      if (!highest || week.first_points > highest.points) {
+        return {
+          user_id: week.first_user_id,
+          name: week.first_name,
+          points: week.first_points,
+          week: week.week
+        };
+      }
+      return highest;
+    }, null);
+
+    // Most Total Season Points
+    const seasonPointsLeaders = members.map(member => {
+      const totalPoints = weekly.reduce((sum, week) => {
+        if (week.first_user_id === member.sleeper_user_id) {
+          sum += week.first_points;
+        } else if (week.second_user_id === member.sleeper_user_id) {
+          sum += week.second_points;
+        }
+        return sum;
+      }, 0);
+
+      return {
+        user_id: member.sleeper_user_id,
+        name: member.name,
+        totalPoints
+      };
+    }).sort((a, b) => b.totalPoints - a.totalPoints)[0];
+
+    return {
+      highestWeekScore,
+      seasonPointsLeader: seasonPointsLeaders
+    };
+  }, [members, weekly]);
+
   if (loading) return <div className="text-emerald-400 text-center font-semibold">Loading data...</div>;
 
   const handleSyncWeekly = async () => {
@@ -124,6 +163,13 @@ export default function Payouts() {
 
   const championByLeague = Object.fromEntries(champions.map(c => [c.league, c]));
 
+  const highestWeekScoreMember = bonusLeaders.highestWeekScore
+    ? members.find(m => m.sleeper_user_id === bonusLeaders.highestWeekScore.user_id)
+    : null;
+  const seasonPointsLeaderMember = bonusLeaders.seasonPointsLeader && bonusLeaders.seasonPointsLeader.totalPoints > 0
+    ? members.find(m => m.sleeper_user_id === bonusLeaders.seasonPointsLeader.user_id)
+    : null;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap justify-between items-center gap-3">
@@ -142,28 +188,28 @@ export default function Payouts() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm border-collapse border border-slate-700">
             <thead>
-              <tr className="border-b border-slate-700 text-slate-400 divide-x divide-slate-700">
-                <SortableTh label="Owner Name" sortKey="name" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3" />
-                <SortableTh label="Dues Paid" sortKey="paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3" />
-                <SortableTh label="Weekly Earnings" sortKey="weeklyEarned" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3" />
-                <SortableTh label="Net Balance" sortKey="netTotal" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3" />
-                <SortableTh label="Survivor ($50)" sortKey="survivor_paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3" />
-                <SortableTh label="Chopped ($25)" sortKey="chopped_paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3" />
+              <tr className="text-slate-400">
+                <SortableTh label="Owner Name" sortKey="name" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3 border border-slate-700" />
+                <SortableTh label="Dues Paid" sortKey="paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3 border border-slate-700" />
+                <SortableTh label="Weekly Earnings" sortKey="weeklyEarned" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3 border border-slate-700" />
+                <SortableTh label="Net Balance" sortKey="netTotal" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3 border border-slate-700" />
+                <SortableTh label="Survivor ($50)" sortKey="survivor_paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3 border border-slate-700" />
+                <SortableTh label="Chopped ($25)" sortKey="chopped_paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3 border border-slate-700" />
               </tr>
             </thead>
             <tbody>
               {sortedPayouts.map(cp => (
-                <tr key={cp.id} className="border-b border-slate-800 divide-x divide-slate-800">
-                  <td className="py-3 px-3 font-semibold whitespace-nowrap">{cp.name}</td>
-                  <td className="py-3 px-3 text-slate-305 whitespace-nowrap">${cp.paid}</td>
-                  <td className="py-3 px-3 text-emerald-400 font-medium whitespace-nowrap">${cp.weeklyEarned}</td>
-                  <td className="py-2 px-3 whitespace-nowrap">
+                <tr key={cp.id}>
+                  <td className="py-3 px-3 font-semibold whitespace-nowrap border border-slate-700">{cp.name}</td>
+                  <td className="py-3 px-3 text-slate-305 whitespace-nowrap border border-slate-700">${cp.paid}</td>
+                  <td className="py-3 px-3 text-emerald-400 font-medium whitespace-nowrap border border-slate-700">${cp.weeklyEarned}</td>
+                  <td className="py-2 px-3 whitespace-nowrap border border-slate-700">
                     <span className={`px-2.5 py-0.5 rounded text-xs font-semibold ${cp.netTotal >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-450'}`}>
                       ${cp.netTotal.toFixed(2)}
                     </span>
                   </td>
-                  <td className="py-3 px-3 whitespace-nowrap"><LeagueStatusBadge member={cp} league="survivor" /></td>
-                  <td className="py-3 px-3 whitespace-nowrap"><LeagueStatusBadge member={cp} league="chopped" /></td>
+                  <td className="py-3 px-3 whitespace-nowrap border border-slate-700"><LeagueStatusBadge member={cp} league="survivor" /></td>
+                  <td className="py-3 px-3 whitespace-nowrap border border-slate-700"><LeagueStatusBadge member={cp} league="chopped" /></td>
                 </tr>
               ))}
             </tbody>
@@ -209,7 +255,7 @@ export default function Payouts() {
       </div>
 
       <div className="bg-slate-800 p-4 sm:p-6 rounded-lg border border-slate-700">
-        <h3 className="font-semibold text-emerald-400 mb-4">Sync logs per week</h3>
+        <h3 className="font-semibold text-emerald-400 mb-4">Redraft Weekly Payouts</h3>
         {weekly.length === 0 ? (
           <div className="text-slate-500 italic block py-4 text-center">No weekly results loaded yet</div>
         ) : (
@@ -237,6 +283,96 @@ export default function Payouts() {
             })}
           </div>
         )}
+      </div>
+
+      <div className="bg-slate-800 p-4 sm:p-6 rounded-lg border border-slate-700">
+        <h3 className="font-semibold text-emerald-400 mb-4">Season Bonus Leaders</h3>
+        <div className="text-sm text-slate-400 mb-4">
+          Each bonus pays $50 at end of regular season (through Week 14)
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm border-collapse border border-slate-700">
+            <thead>
+              <tr className="text-slate-400">
+                <th className="py-2 px-3 whitespace-nowrap border border-slate-700">Bonus Category</th>
+                <th className="py-2 px-3 whitespace-nowrap border border-slate-700">Current Leader</th>
+                <th className="py-2 px-3 whitespace-nowrap border border-slate-700">Record/Score</th>
+                <th className="py-2 px-3 whitespace-nowrap border border-slate-700">Payout</th>
+                <th className="py-2 px-3 whitespace-nowrap border border-slate-700">Status</th>
+                <th className="py-2 px-3 whitespace-nowrap border border-slate-700">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="py-3 px-3 font-semibold whitespace-nowrap border border-slate-700">Best Regular Season Record</td>
+                <td className="py-3 px-3 text-slate-400 italic whitespace-nowrap border border-slate-700">TBD - standings not synced</td>
+                <td className="py-3 px-3 whitespace-nowrap border border-slate-700">-</td>
+                <td className="py-3 px-3 text-emerald-400 font-medium whitespace-nowrap border border-slate-700">$50</td>
+                <td className="py-3 px-3 whitespace-nowrap border border-slate-700">
+                  <span className="bg-yellow-500/20 text-yellow-400 px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">Pending</span>
+                </td>
+                <td className="py-3 px-3 whitespace-nowrap border border-slate-700"></td>
+              </tr>
+              <tr>
+                <td className="py-3 px-3 font-semibold whitespace-nowrap border border-slate-700">Highest Single Week Score</td>
+                <td className="py-3 px-3 whitespace-nowrap border border-slate-700">
+                  {bonusLeaders.highestWeekScore ? (
+                    <span className="text-emerald-400">{bonusLeaders.highestWeekScore.name}</span>
+                  ) : (
+                    <span className="text-slate-400 italic">No data yet</span>
+                  )}
+                </td>
+                <td className="py-3 px-3 whitespace-nowrap border border-slate-700">
+                  {bonusLeaders.highestWeekScore ? (
+                    <>
+                      {bonusLeaders.highestWeekScore.points.toFixed(2)} pts <span className="text-slate-500">(Week {bonusLeaders.highestWeekScore.week})</span>
+                    </>
+                  ) : '-'}
+                </td>
+                <td className="py-3 px-3 text-emerald-400 font-medium whitespace-nowrap border border-slate-700">$50</td>
+                <td className="py-3 px-3 whitespace-nowrap border border-slate-700">
+                  {bonusLeaders.highestWeekScore ? (
+                    <span className="bg-yellow-500/20 text-yellow-400 px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">Leading</span>
+                  ) : (
+                    <span className="bg-slate-500/20 text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">No Data</span>
+                  )}
+                </td>
+                <td className="py-3 px-3 whitespace-nowrap border border-slate-700">
+                  <VenmoPayButton username={highestWeekScoreMember?.venmo_username} amount={50} note="Highest Single Week Score bonus" />
+                </td>
+              </tr>
+              <tr>
+                <td className="py-3 px-3 font-semibold whitespace-nowrap border border-slate-700">Most Total Season Points</td>
+                <td className="py-3 px-3 whitespace-nowrap border border-slate-700">
+                  {bonusLeaders.seasonPointsLeader && bonusLeaders.seasonPointsLeader.totalPoints > 0 ? (
+                    <span className="text-emerald-400">{bonusLeaders.seasonPointsLeader.name}</span>
+                  ) : (
+                    <span className="text-slate-400 italic">No data yet</span>
+                  )}
+                </td>
+                <td className="py-3 px-3 whitespace-nowrap border border-slate-700">
+                  {bonusLeaders.seasonPointsLeader && bonusLeaders.seasonPointsLeader.totalPoints > 0
+                    ? `${bonusLeaders.seasonPointsLeader.totalPoints.toFixed(2)} pts`
+                    : '-'}
+                </td>
+                <td className="py-3 px-3 text-emerald-400 font-medium whitespace-nowrap border border-slate-700">$50</td>
+                <td className="py-3 px-3 whitespace-nowrap border border-slate-700">
+                  {bonusLeaders.seasonPointsLeader && bonusLeaders.seasonPointsLeader.totalPoints > 0 ? (
+                    <span className="bg-yellow-500/20 text-yellow-400 px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">Leading</span>
+                  ) : (
+                    <span className="bg-slate-500/20 text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">No Data</span>
+                  )}
+                </td>
+                <td className="py-3 px-3 whitespace-nowrap border border-slate-700">
+                  <VenmoPayButton username={seasonPointsLeaderMember?.venmo_username} amount={50} note="Most Total Season Points bonus" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-4 text-xs text-slate-500 italic">
+          * Season bonus leaders will be finalized after Week 14 regular season completion
+        </div>
       </div>
     </div>
   );

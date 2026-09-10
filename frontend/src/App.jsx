@@ -4,7 +4,6 @@ import { LeagueProvider } from './context/LeagueContext';
 import Dashboard from './components/Dashboard';
 import Payments from './components/Payments';
 import Payouts from './components/Payouts';
-import RedraftBonuses from './components/RedraftBonuses';
 
 export default function App() {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,7 +23,6 @@ export default function App() {
                 <Link to="/" className="hover:text-emerald-400 transition">Dashboard</Link>
                 <Link to="/payments" className="hover:text-emerald-400 transition">Payments</Link>
                 <Link to="/payouts" className="hover:text-emerald-400 transition">Payout Ledger</Link>
-                <Link to="/bonuses" className="hover:text-emerald-400 transition">Redraft Bonuses</Link>
               </nav>
 
               {/* Hamburger Button */}
@@ -49,7 +47,6 @@ export default function App() {
                 <Link to="/" onClick={closeMenu} className="hover:text-emerald-400 transition px-2 py-1 rounded hover:bg-slate-700/50">Dashboard</Link>
                 <Link to="/payments" onClick={closeMenu} className="hover:text-emerald-400 transition px-2 py-1 rounded hover:bg-slate-700/50">Payments</Link>
                 <Link to="/payouts" onClick={closeMenu} className="hover:text-emerald-400 transition px-2 py-1 rounded hover:bg-slate-700/50">Payout Ledger</Link>
-                <Link to="/bonuses" onClick={closeMenu} className="hover:text-emerald-400 transition px-2 py-1 rounded hover:bg-slate-700/50">Redraft Bonuses</Link>
               </nav>
             )}
           </header>
@@ -58,7 +55,6 @@ export default function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/payments" element={<Payments />} />
               <Route path="/payouts" element={<Payouts />} />
-              <Route path="/bonuses" element={<RedraftBonuses />} />
             </Routes>
           </main>
         </div>
