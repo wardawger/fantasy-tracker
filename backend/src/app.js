@@ -12,6 +12,30 @@ const KEEPER_ID = '1387435648129966080';
 const REDRAFT_ID = '1387433205228896256';
 const SLEEPER_BASE_URL = 'https://api.sleeper.app/v1';
 
+const LEAGUE_DUES = { main: 250, survivor: 50, chopped: 25 };
+
+function mapMemberRow(row) {
+  return {
+    id: row[0],
+    name: row[1],
+    sleeper_user_id: row[2],
+    total_owed: row[3],
+    total_paid: row[4],
+    survivor_opted_in: !!row[5],
+    chopped_opted_in: !!row[6]
+  };
+}
+
+async function attachLeaguePaidTotals(db, members) {
+  for (const m of members) {
+    const survivorResult = db.exec("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE member_id = ? AND league = 'survivor'", [m.id]);
+    const choppedResult = db.exec("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE member_id = ? AND league = 'chopped'", [m.id]);
+    m.survivor_paid = survivorResult[0]?.values[0]?.[0] || 0;
+    m.chopped_paid = choppedResult[0]?.values[0]?.[0] || 0;
+  }
+  return members;
+}
+
 // Initialize Members if table empty
 app.get('/api/sync-members', async (req, res) => {
   try {
@@ -28,14 +52,8 @@ app.get('/api/sync-members', async (req, res) => {
       }
       saveDb();
     }
-    const listResult = db.exec('SELECT * FROM members');
-    const members = listResult[0]?.values.map(row => ({
-      id: row[0],
-      name: row[1],
-      sleeper_user_id: row[2],
-      total_owed: row[3],
-      total_paid: row[4]
-    })) || [];
+    const listResult = db.exec('SELECT id, name, sleeper_user_id, total_owed, total_paid, survivor_opted_in, chopped_opted_in FROM members');
+    const members = await attachLeaguePaidTotals(db, (listResult[0]?.values.map(mapMemberRow)) || []);
     res.json(members);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -44,27 +62,42 @@ app.get('/api/sync-members', async (req, res) => {
 
 app.get('/api/members', async (req, res) => {
   const db = await getDb();
-  const result = db.exec('SELECT * FROM members');
-  const members = result[0]?.values.map(row => ({
-    id: row[0],
-    name: row[1],
-    sleeper_user_id: row[2],
-    total_owed: row[3],
-    total_paid: row[4]
-  })) || [];
+  const result = db.exec('SELECT id, name, sleeper_user_id, total_owed, total_paid, survivor_opted_in, chopped_opted_in FROM members');
+  const members = await attachLeaguePaidTotals(db, (result[0]?.values.map(mapMemberRow)) || []);
   res.json(members);
 });
 
+app.post('/api/members/:id/opt-in', async (req, res) => {
+  const { id } = req.params;
+  const { league, optedIn } = req.body;
+
+  if (league !== 'survivor' && league !== 'chopped') {
+    return res.status(400).json({ error: 'league must be survivor or chopped' });
+  }
+
+  const db = await getDb();
+  const column = league === 'survivor' ? 'survivor_opted_in' : 'chopped_opted_in';
+
+  try {
+    db.run(`UPDATE members SET ${column} = ? WHERE id = ?`, [optedIn ? 1 : 0, id]);
+    saveDb();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/payments', async (req, res) => {
-  const { memberId, amount, date, method, notes } = req.body;
+  const { memberId, amount, date, method, notes, league } = req.body;
+  const resolvedLeague = league && LEAGUE_DUES[league] !== undefined ? league : 'main';
   const db = await getDb();
 
   try {
     const id = crypto.randomUUID();
-    db.run('INSERT INTO payments (id, member_id, amount, date, method, notes) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, memberId, amount, date, method, notes || '']);
+    db.run('INSERT INTO payments (id, member_id, amount, date, method, notes, league) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [id, memberId, amount, date, method, notes || '', resolvedLeague]);
 
-    const sumResult = db.exec('SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE member_id = ?', [memberId]);
+    const sumResult = db.exec("SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE member_id = ? AND league = 'main'", [memberId]);
     const totalPaid = sumResult[0]?.values[0]?.[0] || 0;
 
     db.run('UPDATE members SET total_paid = ? WHERE id = ?', [totalPaid, memberId]);
@@ -79,7 +112,7 @@ app.post('/api/payments', async (req, res) => {
 app.get('/api/payments', async (req, res) => {
   const db = await getDb();
   const result = db.exec(`
-    SELECT p.id, p.member_id, p.amount, p.date, p.method, p.notes, m.name as member_name
+    SELECT p.id, p.member_id, p.amount, p.date, p.method, p.notes, m.name as member_name, p.league
     FROM payments p
     JOIN members m ON p.member_id = m.id
     ORDER BY p.date DESC
@@ -91,7 +124,8 @@ app.get('/api/payments', async (req, res) => {
     date: row[3],
     method: row[4],
     notes: row[5],
-    member_name: row[6]
+    member_name: row[6],
+    league: row[7]
   })) || [];
   res.json(payments);
 });
@@ -109,7 +143,7 @@ app.delete('/api/payments/:id', async (req, res) => {
     const memberId = paymentResult[0].values[0][0];
     db.run('DELETE FROM payments WHERE id = ?', [id]);
 
-    const sumResult = db.exec('SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE member_id = ?', [memberId]);
+    const sumResult = db.exec("SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE member_id = ? AND league = 'main'", [memberId]);
     const totalPaid = sumResult[0]?.values[0]?.[0] || 0;
 
     db.run('UPDATE members SET total_paid = ? WHERE id = ?', [totalPaid, memberId]);
