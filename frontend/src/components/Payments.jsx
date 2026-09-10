@@ -1,5 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { LeagueContext } from '../context/LeagueContext';
+import { useSortableData } from '../hooks/useSortableData';
+import SortableTh from './SortableTh';
 
 const LEAGUE_DUES = { main: 250, survivor: 50, chopped: 25 };
 const LEAGUE_LABELS = { main: 'Main League ($250)', survivor: 'Survivor ($50)', chopped: 'Chopped ($25)' };
@@ -26,6 +28,8 @@ export default function Payments() {
   const [editMethod, setEditMethod] = useState('Venmo');
   const [editNotes, setEditNotes] = useState('');
   const [editVenmoInput, setEditVenmoInput] = useState('');
+
+  const { items: sortedPayments, sortKey: paymentsSortKey, sortDirection: paymentsSortDirection, requestSort: requestPaymentsSort } = useSortableData(payments, 'date', 'desc');
 
   const CORRECT_PASSWORD = 'Dtwd6080!';
 
@@ -232,16 +236,16 @@ export default function Payments() {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-slate-700 text-slate-400">
-                    <th className="py-2">Date</th>
-                    <th className="py-2">Owner</th>
-                    <th className="py-2">Amount</th>
-                    <th className="py-2">League</th>
-                    <th className="py-2">Protocol</th>
+                    <SortableTh label="Date" sortKey="date" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} />
+                    <SortableTh label="Owner" sortKey="member_name" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} />
+                    <SortableTh label="Amount" sortKey="amount" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} />
+                    <SortableTh label="League" sortKey="league" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} />
+                    <SortableTh label="Protocol" sortKey="method" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} />
                     <th className="py-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {payments.map(p => (
+                  {sortedPayments.map(p => (
                     <React.Fragment key={p.id}>
                       <tr
                         className="border-b border-slate-800 hover:bg-slate-700/50 cursor-pointer transition"

@@ -1,5 +1,7 @@
 import React, { useContext } from 'react';
 import { LeagueContext } from '../context/LeagueContext';
+import { useSortableData } from '../hooks/useSortableData';
+import SortableTh from './SortableTh';
 
 const LEAGUE_DUES = { survivor: 50, chopped: 25 };
 
@@ -21,6 +23,7 @@ function LeagueStatusBadge({ member, league }) {
 
 export default function Dashboard() {
   const { members, weekly, loading } = useContext(LeagueContext);
+  const { items: sortedMembers, sortKey: membersSortKey, sortDirection: membersSortDirection, requestSort: requestMembersSort } = useSortableData(members, 'name', 'asc');
 
   if (loading) return <div className="text-emerald-400 text-center font-semibold">Loading data...</div>;
 
@@ -50,14 +53,14 @@ export default function Dashboard() {
           <table className="w-full text-left text-sm text-slate-350">
             <thead>
               <tr className="border-b border-slate-700 text-slate-400">
-                <th className="py-2">Team Owner</th>
-                <th className="py-2">Dues Status ($250)</th>
-                <th className="py-2">Survivor ($50)</th>
-                <th className="py-2">Chopped ($25)</th>
+                <SortableTh label="Team Owner" sortKey="name" currentKey={membersSortKey} direction={membersSortDirection} onSort={requestMembersSort} />
+                <SortableTh label="Dues Status ($250)" sortKey="total_paid" currentKey={membersSortKey} direction={membersSortDirection} onSort={requestMembersSort} />
+                <SortableTh label="Survivor ($50)" sortKey="survivor_paid" currentKey={membersSortKey} direction={membersSortDirection} onSort={requestMembersSort} />
+                <SortableTh label="Chopped ($25)" sortKey="chopped_paid" currentKey={membersSortKey} direction={membersSortDirection} onSort={requestMembersSort} />
               </tr>
             </thead>
             <tbody>
-              {members.map(m => (
+              {sortedMembers.map(m => (
                 <tr key={m.id} className="border-b border-slate-800">
                   <td className="py-3 font-semibold">{m.name}</td>
                   <td className="py-3">

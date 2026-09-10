@@ -1,5 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { LeagueContext } from '../context/LeagueContext';
+import { useSortableData } from '../hooks/useSortableData';
+import SortableTh from './SortableTh';
 
 const LEAGUE_DUES = { survivor: 50, chopped: 25 };
 
@@ -46,6 +48,30 @@ export default function Payouts() {
   const [syncing, setSyncing] = useState(false);
   const [syncingChampion, setSyncingChampion] = useState(null);
 
+  // Compile individual member payouts ledger
+  const compiledPayouts = members.map(m => {
+    const memberWeeklyEarnings = weekly.reduce((acc, w) => {
+      let sum = acc;
+      if (w.first_user_id === m.sleeper_user_id) sum += w.first_payout;
+      if (w.second_user_id === m.sleeper_user_id) sum += w.second_payout;
+      return sum;
+    }, 0);
+
+    return {
+      id: m.id,
+      name: m.name,
+      paid: m.total_paid || 0,
+      weeklyEarned: memberWeeklyEarnings,
+      netTotal: memberWeeklyEarnings - (250.0 - (m.total_paid || 0)),
+      survivor_opted_in: m.survivor_opted_in,
+      chopped_opted_in: m.chopped_opted_in,
+      survivor_paid: m.survivor_paid,
+      chopped_paid: m.chopped_paid
+    };
+  });
+
+  const { items: sortedPayouts, sortKey: payoutsSortKey, sortDirection: payoutsSortDirection, requestSort: requestPayoutsSort } = useSortableData(compiledPayouts, 'name', 'asc');
+
   if (loading) return <div className="text-emerald-400 text-center font-semibold">Loading data...</div>;
 
   const handleSyncWeekly = async () => {
@@ -77,28 +103,6 @@ export default function Payouts() {
 
   const championByLeague = Object.fromEntries(champions.map(c => [c.league, c]));
 
-  // Compile individual member payouts ledger
-  const compiledPayouts = members.map(m => {
-    const memberWeeklyEarnings = weekly.reduce((acc, w) => {
-      let sum = acc;
-      if (w.first_user_id === m.sleeper_user_id) sum += w.first_payout;
-      if (w.second_user_id === m.sleeper_user_id) sum += w.second_payout;
-      return sum;
-    }, 0);
-
-    return {
-      id: m.id,
-      name: m.name,
-      paid: m.total_paid || 0,
-      weeklyEarned: memberWeeklyEarnings,
-      netTotal: memberWeeklyEarnings - (250.0 - (m.total_paid || 0)),
-      survivor_opted_in: m.survivor_opted_in,
-      chopped_opted_in: m.chopped_opted_in,
-      survivor_paid: m.survivor_paid,
-      chopped_paid: m.chopped_paid
-    };
-  });
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap justify-between items-center gap-3">
@@ -118,16 +122,16 @@ export default function Payouts() {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-slate-700 text-slate-400">
-                <th className="py-2 pr-4 whitespace-nowrap">Owner Name</th>
-                <th className="py-2 pr-4 whitespace-nowrap">Dues Paid</th>
-                <th className="py-2 pr-4 whitespace-nowrap">Weekly Earnings</th>
-                <th className="py-2 pr-4 whitespace-nowrap">Net Balance</th>
-                <th className="py-2 pr-4 whitespace-nowrap">Survivor ($50)</th>
-                <th className="py-2 whitespace-nowrap">Chopped ($25)</th>
+                <SortableTh label="Owner Name" sortKey="name" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="pr-4" />
+                <SortableTh label="Dues Paid" sortKey="paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="pr-4" />
+                <SortableTh label="Weekly Earnings" sortKey="weeklyEarned" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="pr-4" />
+                <SortableTh label="Net Balance" sortKey="netTotal" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="pr-4" />
+                <SortableTh label="Survivor ($50)" sortKey="survivor_paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="pr-4" />
+                <SortableTh label="Chopped ($25)" sortKey="chopped_paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} />
               </tr>
             </thead>
             <tbody>
-              {compiledPayouts.map(cp => (
+              {sortedPayouts.map(cp => (
                 <tr key={cp.id} className="border-b border-slate-800">
                   <td className="py-3 pr-4 font-semibold whitespace-nowrap">{cp.name}</td>
                   <td className="py-3 pr-4 text-slate-305 whitespace-nowrap">${cp.paid}</td>
