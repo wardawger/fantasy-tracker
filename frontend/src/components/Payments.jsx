@@ -250,6 +250,24 @@ export default function Payments() {
                         <tr className="bg-slate-700/30">
                           <td colSpan="6" className="py-4 px-6">
                             <div className="space-y-3 text-sm max-w-sm">
+                              <div className="flex gap-4">
+                                <label className="flex items-center gap-2 text-slate-300">
+                                  <input
+                                    type="checkbox"
+                                    checked={!!members.find(m => m.id === p.member_id)?.survivor_opted_in}
+                                    onChange={e => optIn(p.member_id, 'survivor', e.target.checked)}
+                                  />
+                                  Survivor
+                                </label>
+                                <label className="flex items-center gap-2 text-slate-300">
+                                  <input
+                                    type="checkbox"
+                                    checked={!!members.find(m => m.id === p.member_id)?.chopped_opted_in}
+                                    onChange={e => optIn(p.member_id, 'chopped', e.target.checked)}
+                                  />
+                                  Chopped
+                                </label>
+                              </div>
                               <div>
                                 <label className="block text-slate-400 mb-1">Amount</label>
                                 <input type="number" step="any" className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-100" value={editAmount} onChange={e => setEditAmount(e.target.value)} />
