@@ -57,4 +57,28 @@ describe('Database Tests', () => {
       `);
     }).not.toThrow();
   });
+
+  test('should have league_champions table with defaults', async () => {
+    const db = await getDb(TEST_DB);
+    db.run('INSERT INTO league_champions (league) VALUES (?)', ['chopped']);
+
+    const result = db.exec('SELECT league, winner_user_id, winner_name, payout, decided FROM league_champions WHERE league = ?', ['chopped']);
+    const row = result[0].values[0];
+    expect(row[0]).toBe('chopped');
+    expect(row[1]).toBe(null);
+    expect(row[2]).toBe(null);
+    expect(row[3]).toBe(null);
+    expect(row[4]).toBe(0);
+  });
+
+  test('league_champions upsert replaces the prior row for a league (INSERT OR REPLACE pattern)', async () => {
+    const db = await getDb(TEST_DB);
+    db.run('INSERT INTO league_champions (league, decided) VALUES (?, ?)', ['survivor', 0]);
+    db.run('INSERT OR REPLACE INTO league_champions (league, winner_name, payout, decided) VALUES (?, ?, ?, ?)',
+      ['survivor', 'Test Member', 500, 1]);
+
+    const result = db.exec('SELECT winner_name, payout, decided FROM league_champions WHERE league = ?', ['survivor']);
+    expect(result[0].values.length).toBe(1);
+    expect(result[0].values[0]).toEqual(['Test Member', 500, 1]);
+  });
 });

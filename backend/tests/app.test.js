@@ -157,4 +157,40 @@ describe('League dues logic', () => {
     const existing = db.exec('SELECT member_id, league FROM payments WHERE id = ?', [unknownId]);
     expect(existing[0] === undefined || existing[0].values.length === 0).toBe(true);
   });
+
+  test('chopped champion payout is opted-in member count times the chopped due', async () => {
+    const db = await getDb(TEST_DB);
+    db.run('INSERT INTO members (id, name, sleeper_user_id, chopped_opted_in) VALUES (?, ?, ?, ?)',
+      [crypto.randomUUID(), 'Member A', 'sleeper_a', 1]);
+    db.run('INSERT INTO members (id, name, sleeper_user_id, chopped_opted_in) VALUES (?, ?, ?, ?)',
+      [crypto.randomUUID(), 'Member B', 'sleeper_b', 1]);
+    db.run('INSERT INTO members (id, name, sleeper_user_id, chopped_opted_in) VALUES (?, ?, ?, ?)',
+      [crypto.randomUUID(), 'Member C', 'sleeper_c', 0]);
+
+    // Mirrors resolveChoppedChampion's payout calculation: opted-in count * LEAGUE_DUES.chopped (25).
+    const optedInResult = db.exec('SELECT COUNT(*) FROM members WHERE chopped_opted_in = 1');
+    const payout = (optedInResult[0]?.values[0]?.[0] || 0) * 25;
+    expect(payout).toBe(50);
+  });
+
+  test('survivor champion is resolved only when exactly one opted-in member remains alive', async () => {
+    const db = await getDb(TEST_DB);
+    db.run('INSERT INTO members (id, name, sleeper_user_id, survivor_opted_in) VALUES (?, ?, ?, ?)',
+      [crypto.randomUUID(), 'Member A', 'sleeper_a', 1]);
+    db.run('INSERT INTO members (id, name, sleeper_user_id, survivor_opted_in) VALUES (?, ?, ?, ?)',
+      [crypto.randomUUID(), 'Member B', 'sleeper_b', 1]);
+
+    // Mirrors resolveSurvivorChampion: only opted-in members are candidates, matched by sleeper_user_id.
+    const memberResult = db.exec('SELECT sleeper_user_id, name FROM members WHERE survivor_opted_in = 1');
+    const memberNameByUserId = new Map(memberResult[0].values.map(([userId, name]) => [userId, name]));
+
+    const twoAliveRosters = [{ owner_id: 'sleeper_a', metadata: { is_eliminated: 'false' } }, { owner_id: 'sleeper_b', metadata: { is_eliminated: 'false' } }];
+    const twoAlive = twoAliveRosters.filter(r => memberNameByUserId.has(r.owner_id) && r.metadata?.is_eliminated !== 'true');
+    expect(twoAlive.length).toBe(2); // not decided yet - more than one alive
+
+    const oneAliveRosters = [{ owner_id: 'sleeper_a', metadata: { is_eliminated: 'true' } }, { owner_id: 'sleeper_b', metadata: { is_eliminated: 'false' } }];
+    const oneAlive = oneAliveRosters.filter(r => memberNameByUserId.has(r.owner_id) && r.metadata?.is_eliminated !== 'true');
+    expect(oneAlive.length).toBe(1);
+    expect(memberNameByUserId.get(oneAlive[0].owner_id)).toBe('Member B');
+  });
 });

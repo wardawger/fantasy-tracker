@@ -65,6 +65,17 @@ function initDB(sqliteDb) {
     );
   `);
 
+  sqliteDb.run(`
+    CREATE TABLE IF NOT EXISTS league_champions (
+      league TEXT PRIMARY KEY,
+      winner_user_id TEXT,
+      winner_name TEXT,
+      payout REAL,
+      decided INTEGER NOT NULL DEFAULT 0,
+      synced_at TEXT
+    );
+  `);
+
   addColumnIfMissing(sqliteDb, 'payments', 'league', "TEXT NOT NULL DEFAULT 'main'");
   addColumnIfMissing(sqliteDb, 'members', 'survivor_opted_in', 'INTEGER NOT NULL DEFAULT 0');
   addColumnIfMissing(sqliteDb, 'members', 'chopped_opted_in', 'INTEGER NOT NULL DEFAULT 0');

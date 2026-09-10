@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { getDb, saveDb } from './database.js';
-import { fetchUsers, fetchRosters, fetchWeeklyMatchups } from './sleeper.js';
+import { fetchUsers, fetchRosters, fetchWeeklyMatchups, fetchWinnersBracket } from './sleeper.js';
 import crypto from 'crypto';
 
 const app = express();
@@ -10,6 +10,8 @@ app.use(express.json());
 
 const KEEPER_ID = '1387435648129966080';
 const REDRAFT_ID = '1387433205228896256';
+const SURVIVOR_LEAGUE_ID = '1397584028407754752';
+const CHOPPED_LEAGUE_ID = '1401420275240738816';
 const SLEEPER_BASE_URL = 'https://api.sleeper.app/v1';
 
 const LEAGUE_DUES = { main: 250, survivor: 50, chopped: 25 };
@@ -283,6 +285,92 @@ app.get('/api/weekly', async (req, res) => {
     fetched_at: row[11]
   })) || [];
   res.json(weekly);
+});
+
+app.get('/api/champions', async (req, res) => {
+  const db = await getDb();
+  const result = db.exec('SELECT league, winner_user_id, winner_name, payout, decided, synced_at FROM league_champions');
+  const champions = result[0]?.values.map(row => ({
+    league: row[0],
+    winner_user_id: row[1],
+    winner_name: row[2],
+    payout: row[3],
+    decided: !!row[4],
+    synced_at: row[5]
+  })) || [];
+  res.json(champions);
+});
+
+async function resolveChoppedChampion(db) {
+  const bracket = await fetchWinnersBracket(CHOPPED_LEAGUE_ID);
+  const finalMatch = (bracket || []).find(m => m.p === 1 && m.w);
+  if (!finalMatch) return { decided: false };
+
+  const rosters = await fetchRosters(CHOPPED_LEAGUE_ID);
+  const winningRoster = rosters.find(r => r.roster_id === finalMatch.w);
+  if (!winningRoster) return { decided: false };
+
+  const memberResult = db.exec('SELECT name FROM members WHERE sleeper_user_id = ?', [winningRoster.owner_id]);
+  const winnerName = memberResult[0]?.values[0]?.[0];
+  if (!winnerName) return { decided: false };
+
+  const optedInResult = db.exec('SELECT COUNT(*) FROM members WHERE chopped_opted_in = 1');
+  const payout = (optedInResult[0]?.values[0]?.[0] || 0) * LEAGUE_DUES.chopped;
+
+  return { decided: true, winnerUserId: winningRoster.owner_id, winnerName, payout };
+}
+
+async function resolveSurvivorChampion(db) {
+  const rosters = await fetchRosters(SURVIVOR_LEAGUE_ID);
+  const memberResult = db.exec('SELECT sleeper_user_id, name FROM members WHERE survivor_opted_in = 1');
+  const memberRows = memberResult[0]?.values || [];
+  const memberNameByUserId = new Map(memberRows.map(([userId, name]) => [userId, name]));
+
+  const aliveMembers = rosters.filter(r =>
+    memberNameByUserId.has(r.owner_id) && r.metadata?.is_eliminated !== 'true'
+  );
+
+  if (aliveMembers.length !== 1) return { decided: false };
+
+  const winnerUserId = aliveMembers[0].owner_id;
+  const winnerName = memberNameByUserId.get(winnerUserId);
+
+  const optedInResult = db.exec('SELECT COUNT(*) FROM members WHERE survivor_opted_in = 1');
+  const payout = (optedInResult[0]?.values[0]?.[0] || 0) * LEAGUE_DUES.survivor;
+
+  return { decided: true, winnerUserId, winnerName, payout };
+}
+
+app.get('/api/refresh/champions/:league', async (req, res) => {
+  const { league } = req.params;
+  if (league !== 'survivor' && league !== 'chopped') {
+    return res.status(400).json({ error: 'league must be survivor or chopped' });
+  }
+
+  const db = await getDb();
+
+  try {
+    const resolved = league === 'chopped'
+      ? await resolveChoppedChampion(db)
+      : await resolveSurvivorChampion(db);
+
+    db.run(`
+      INSERT OR REPLACE INTO league_champions (league, winner_user_id, winner_name, payout, decided, synced_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `, [
+      league,
+      resolved.winnerUserId || null,
+      resolved.winnerName || null,
+      resolved.payout || null,
+      resolved.decided ? 1 : 0,
+      new Date().toISOString()
+    ]);
+    saveDb();
+
+    res.json({ success: true, league, decided: resolved.decided });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 const PORT = process.env.PORT || 20129;

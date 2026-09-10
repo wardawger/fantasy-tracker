@@ -20,9 +20,10 @@ function LeagueStatusBadge({ member, league }) {
 }
 
 export default function Payouts() {
-  const { members, weekly, refreshWeekResults, loading } = useContext(LeagueContext);
+  const { members, weekly, champions, refreshWeekResults, refreshChampion, loading } = useContext(LeagueContext);
   const [weekInput, setWeekInput] = useState('1');
   const [syncing, setSyncing] = useState(false);
+  const [syncingChampion, setSyncingChampion] = useState(null);
 
   if (loading) return <div className="text-emerald-400 text-center font-semibold">Loading data...</div>;
 
@@ -41,6 +42,19 @@ export default function Payouts() {
       setSyncing(false);
     }
   };
+
+  const handleSyncChampion = async (league) => {
+    setSyncingChampion(league);
+    try {
+      await refreshChampion(league);
+    } catch (err) {
+      alert(`Error fetching ${league} champion: ${err.response?.data?.error || err.message}`);
+    } finally {
+      setSyncingChampion(null);
+    }
+  };
+
+  const championByLeague = Object.fromEntries(champions.map(c => [c.league, c]));
 
   // Compile individual member payouts ledger
   const compiledPayouts = members.map(m => {
@@ -105,6 +119,49 @@ export default function Payouts() {
                 <td className="py-3"><LeagueStatusBadge member={cp} league="chopped" /></td>
               </tr>
             ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
+        <h3 className="font-semibold text-emerald-400 mb-4">League Champions (Winner Take All)</h3>
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-slate-700 text-slate-400">
+              <th className="py-2">League</th>
+              <th className="py-2">Champion</th>
+              <th className="py-2">Payout</th>
+              <th className="py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {['survivor', 'chopped'].map(league => {
+              const champion = championByLeague[league];
+              return (
+                <tr key={league} className="border-b border-slate-800">
+                  <td className="py-3 font-semibold capitalize">{league}</td>
+                  <td className="py-3">
+                    {champion?.decided ? (
+                      <span className="text-slate-100 font-medium">{champion.winner_name}</span>
+                    ) : (
+                      <span className="text-slate-500 italic">Not yet decided</span>
+                    )}
+                  </td>
+                  <td className="py-3 text-emerald-400 font-medium">
+                    {champion?.decided ? `$${champion.payout}` : '—'}
+                  </td>
+                  <td className="py-3">
+                    <button
+                      className="bg-emerald-500 hover:bg-emerald-600 font-semibold px-3 py-1 rounded text-slate-900 text-sm disabled:opacity-50"
+                      onClick={() => handleSyncChampion(league)}
+                      disabled={syncingChampion === league}
+                    >
+                      {syncingChampion === league ? 'Checking...' : 'Check for Winner'}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
