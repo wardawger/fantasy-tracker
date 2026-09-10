@@ -43,7 +43,13 @@ app.get('/api/debug/storage', async (req, res) => {
   res.json({
     mode: getStorageMode(),
     tursoUrlSet: !!process.env.TURSO_DATABASE_URL,
-    tursoTokenSet: !!process.env.TURSO_AUTH_TOKEN
+    tursoTokenSet: !!process.env.TURSO_AUTH_TOKEN,
+    port: process.env.PORT || null,
+    railwayServiceName: process.env.RAILWAY_SERVICE_NAME || null,
+    railwayEnvironmentName: process.env.RAILWAY_ENVIRONMENT_NAME || null,
+    railwayDeploymentId: process.env.RAILWAY_DEPLOYMENT_ID || null,
+    envKeysContainingTurso: Object.keys(process.env).filter(k => k.toUpperCase().includes('TURSO')),
+    totalEnvKeyCount: Object.keys(process.env).length
   });
 });
 
