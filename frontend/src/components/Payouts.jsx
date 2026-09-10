@@ -14,7 +14,7 @@ function VenmoPayButton({ username, amount, note }) {
       href={venmoPayLink(username, amount, note)}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1 bg-[#3D95CE] hover:bg-[#3483B5] font-semibold px-2.5 py-1 rounded text-white text-xs ml-2"
+      className="inline-flex items-center justify-center gap-1 bg-[#3D95CE] hover:bg-[#3483B5] font-semibold px-3 py-1 rounded text-white text-sm whitespace-nowrap"
     >
       <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
         <path d="M20.6 3.2c.7 1.2 1 2.4 1 4 0 5-4.3 11.5-7.7 16.1H6.4L3.3 4.4l6.2-.6 1.6 13.2c1.5-2.5 3.4-6.4 3.4-9 0-1.5-.3-2.5-.7-3.3z"/>
@@ -101,9 +101,9 @@ export default function Payouts() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-3">
         <h2 className="text-2xl font-bold text-emerald-400">Payout Ledger</h2>
-        <div className="flex bg-slate-800 p-2 rounded items-center gap-2 border border-slate-700">
+        <div className="flex flex-wrap bg-slate-800 p-2 rounded items-center gap-2 border border-slate-700">
           <label className="text-sm text-slate-400">Sync Week (1-14):</label>
           <input type="number" min="1" max="14" className="w-16 bg-slate-900 border border-slate-700 text-center rounded p-1 text-slate-100" value={weekInput} onChange={e => setWeekInput(e.target.value)} />
           <button className="bg-emerald-500 hover:bg-emerald-600 font-semibold px-3 py-1 rounded text-slate-900 text-sm disabled:opacity-50" onClick={handleSyncWeekly} disabled={syncing}>
@@ -112,118 +112,105 @@ export default function Payouts() {
         </div>
       </div>
 
-      <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
+      <div className="bg-slate-800 p-4 sm:p-6 rounded-lg border border-slate-700">
         <h3 className="font-semibold text-emerald-400 mb-4">Total Balance Ledger</h3>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-slate-700 text-slate-400">
-              <th className="py-2">Owner Name</th>
-              <th className="py-2">Dues Paid</th>
-              <th className="py-2">Weekly Earnings</th>
-              <th className="py-2">Net Balance</th>
-              <th className="py-2">Survivor ($50)</th>
-              <th className="py-2">Chopped ($25)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {compiledPayouts.map(cp => (
-              <tr key={cp.id} className="border-b border-slate-800">
-                <td className="py-3 font-semibold">{cp.name}</td>
-                <td className="py-3 text-slate-305">${cp.paid}</td>
-                <td className="py-3 text-emerald-400 font-medium">${cp.weeklyEarned}</td>
-                <td className="py-2">
-                  <span className={`px-2.5 py-0.5 rounded text-xs font-semibold ${cp.netTotal >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-450'}`}>
-                    ${cp.netTotal.toFixed(2)}
-                  </span>
-                </td>
-                <td className="py-3"><LeagueStatusBadge member={cp} league="survivor" /></td>
-                <td className="py-3"><LeagueStatusBadge member={cp} league="chopped" /></td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-slate-700 text-slate-400">
+                <th className="py-2 pr-4 whitespace-nowrap">Owner Name</th>
+                <th className="py-2 pr-4 whitespace-nowrap">Dues Paid</th>
+                <th className="py-2 pr-4 whitespace-nowrap">Weekly Earnings</th>
+                <th className="py-2 pr-4 whitespace-nowrap">Net Balance</th>
+                <th className="py-2 pr-4 whitespace-nowrap">Survivor ($50)</th>
+                <th className="py-2 whitespace-nowrap">Chopped ($25)</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
-        <h3 className="font-semibold text-emerald-400 mb-4">League Champions (Winner Take All)</h3>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-slate-700 text-slate-400">
-              <th className="py-2">League</th>
-              <th className="py-2">Champion</th>
-              <th className="py-2">Payout</th>
-              <th className="py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {['survivor', 'chopped'].map(league => {
-              const champion = championByLeague[league];
-              const winnerMember = champion?.decided ? members.find(m => m.sleeper_user_id === champion.winner_user_id) : null;
-              return (
-                <tr key={league} className="border-b border-slate-800">
-                  <td className="py-3 font-semibold capitalize">{league}</td>
-                  <td className="py-3">
-                    {champion?.decided ? (
-                      <span className="text-slate-100 font-medium">{champion.winner_name}</span>
-                    ) : (
-                      <span className="text-slate-500 italic">Not yet decided</span>
-                    )}
+            </thead>
+            <tbody>
+              {compiledPayouts.map(cp => (
+                <tr key={cp.id} className="border-b border-slate-800">
+                  <td className="py-3 pr-4 font-semibold whitespace-nowrap">{cp.name}</td>
+                  <td className="py-3 pr-4 text-slate-305 whitespace-nowrap">${cp.paid}</td>
+                  <td className="py-3 pr-4 text-emerald-400 font-medium whitespace-nowrap">${cp.weeklyEarned}</td>
+                  <td className="py-2 pr-4 whitespace-nowrap">
+                    <span className={`px-2.5 py-0.5 rounded text-xs font-semibold ${cp.netTotal >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-450'}`}>
+                      ${cp.netTotal.toFixed(2)}
+                    </span>
                   </td>
-                  <td className="py-3 text-emerald-400 font-medium">
-                    {champion?.decided ? `$${champion.payout}` : '—'}
-                  </td>
-                  <td className="py-3">
-                    <button
-                      className="bg-emerald-500 hover:bg-emerald-600 font-semibold px-3 py-1 rounded text-slate-900 text-sm disabled:opacity-50"
-                      onClick={() => handleSyncChampion(league)}
-                      disabled={syncingChampion === league}
-                    >
-                      {syncingChampion === league ? 'Checking...' : 'Check for Winner'}
-                    </button>
-                    {champion?.decided && (
-                      <VenmoPayButton username={winnerMember?.venmo_username} amount={champion.payout} note={`${league} champion payout`} />
-                    )}
-                  </td>
+                  <td className="py-3 pr-4 whitespace-nowrap"><LeagueStatusBadge member={cp} league="survivor" /></td>
+                  <td className="py-3 whitespace-nowrap"><LeagueStatusBadge member={cp} league="chopped" /></td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
+      <div className="bg-slate-800 p-4 sm:p-6 rounded-lg border border-slate-700">
+        <h3 className="font-semibold text-emerald-400 mb-4">League Champions (Winner Take All)</h3>
+        <div className="space-y-3">
+          {['survivor', 'chopped'].map(league => {
+            const champion = championByLeague[league];
+            const winnerMember = champion?.decided ? members.find(m => m.sleeper_user_id === champion.winner_user_id) : null;
+            return (
+              <div key={league} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-800 pb-3 last:border-b-0 last:pb-0">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <span className="font-semibold capitalize w-20">{league}</span>
+                  {champion?.decided ? (
+                    <span className="text-slate-100 font-medium">{champion.winner_name}</span>
+                  ) : (
+                    <span className="text-slate-500 italic">Not yet decided</span>
+                  )}
+                  <span className="text-emerald-400 font-medium">
+                    {champion?.decided ? `$${champion.payout}` : '—'}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    className="bg-emerald-500 hover:bg-emerald-600 font-semibold px-3 py-1 rounded text-slate-900 text-sm disabled:opacity-50"
+                    onClick={() => handleSyncChampion(league)}
+                    disabled={syncingChampion === league}
+                  >
+                    {syncingChampion === league ? 'Checking...' : 'Check for Winner'}
+                  </button>
+                  {champion?.decided && (
+                    <VenmoPayButton username={winnerMember?.venmo_username} amount={champion.payout} note={`${league} champion payout`} />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="bg-slate-800 p-4 sm:p-6 rounded-lg border border-slate-700">
         <h3 className="font-semibold text-emerald-400 mb-4">Sync logs per week</h3>
         {weekly.length === 0 ? (
           <div className="text-slate-500 italic block py-4 text-center">No weekly results loaded yet</div>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-slate-700 text-slate-400">
-                <th className="py-2">Week</th>
-                <th className="py-2">1st Place ($17)</th>
-                <th className="py-2">2nd Place ($8)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {weekly.map(w => {
-                const firstMember = members.find(m => m.sleeper_user_id === w.first_user_id);
-                const secondMember = members.find(m => m.sleeper_user_id === w.second_user_id);
-                return (
-                  <tr key={w.id} className="border-b border-slate-800">
-                    <td className="py-3 font-semibold">Week {w.week}</td>
-                    <td className="py-3">
-                      {w.first_name} ({w.first_points.toFixed(2)} pts)
+          <div className="space-y-4">
+            {weekly.map(w => {
+              const firstMember = members.find(m => m.sleeper_user_id === w.first_user_id);
+              const secondMember = members.find(m => m.sleeper_user_id === w.second_user_id);
+              return (
+                <div key={w.id} className="border-b border-slate-800 pb-4 last:border-b-0 last:pb-0">
+                  <div className="font-semibold mb-2">Week {w.week}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-slate-400">1st ($17):</span>
+                      <span className="whitespace-nowrap">{w.first_name} ({w.first_points.toFixed(2)} pts)</span>
                       <VenmoPayButton username={firstMember?.venmo_username} amount={w.first_payout} note={`Week ${w.week} Redraft - 1st place`} />
-                    </td>
-                    <td className="py-3">
-                      {w.second_name} ({w.second_points.toFixed(2)} pts)
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-slate-400">2nd ($8):</span>
+                      <span className="whitespace-nowrap">{w.second_name} ({w.second_points.toFixed(2)} pts)</span>
                       <VenmoPayButton username={secondMember?.venmo_username} amount={w.second_payout} note={`Week ${w.week} Redraft - 2nd place`} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
