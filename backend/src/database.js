@@ -130,10 +130,6 @@ export function saveDb() {
   // Turso commits each statement as it runs; nothing to flush.
 }
 
-export function getStorageMode() {
-  return mode;
-}
-
 export function closeDb() {
   if (mode === 'sqljs' && sqljsRaw) {
     saveDb();

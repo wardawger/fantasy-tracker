@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { getDb, saveDb, getStorageMode } from './database.js';
+import { getDb, saveDb } from './database.js';
 import { fetchUsers, fetchRosters, fetchWeeklyMatchups, fetchWinnersBracket } from './sleeper.js';
 import crypto from 'crypto';
 
@@ -37,21 +37,6 @@ async function attachLeaguePaidTotals(db, members) {
   }
   return members;
 }
-
-app.get('/api/debug/storage', async (req, res) => {
-  await getDb();
-  res.json({
-    mode: getStorageMode(),
-    tursoUrlSet: !!process.env.TURSO_DATABASE_URL,
-    tursoTokenSet: !!process.env.TURSO_AUTH_TOKEN,
-    port: process.env.PORT || null,
-    railwayServiceName: process.env.RAILWAY_SERVICE_NAME || null,
-    railwayEnvironmentName: process.env.RAILWAY_ENVIRONMENT_NAME || null,
-    railwayDeploymentId: process.env.RAILWAY_DEPLOYMENT_ID || null,
-    envKeysContainingTurso: Object.keys(process.env).filter(k => k.toUpperCase().includes('TURSO')),
-    totalEnvKeyCount: Object.keys(process.env).length
-  });
-});
 
 // Initialize Members if table empty
 app.get('/api/sync-members', async (req, res) => {
