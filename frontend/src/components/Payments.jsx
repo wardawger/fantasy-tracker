@@ -1,10 +1,14 @@
 import React, { useContext, useState } from 'react';
 import { LeagueContext } from '../context/LeagueContext';
 
+const LEAGUE_DUES = { main: 250, survivor: 50, chopped: 25 };
+const LEAGUE_LABELS = { main: 'Main League ($250)', survivor: 'Survivor ($50)', chopped: 'Chopped ($25)' };
+
 export default function Payments() {
-  const { members, payments, addPayment, deletePayment, loading } = useContext(LeagueContext);
+  const { members, payments, addPayment, deletePayment, optIn, loading } = useContext(LeagueContext);
   const [memberId, setMemberId] = useState('');
   const [amount, setAmount] = useState('');
+  const [league, setLeague] = useState('main');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [method, setMethod] = useState('Venmo');
   const [notes, setNotes] = useState('');
@@ -75,7 +79,8 @@ export default function Payments() {
       amount: parseFloat(amount),
       date,
       method,
-      notes
+      notes,
+      league
     });
     setAmount('');
     setNotes('');
@@ -101,6 +106,42 @@ export default function Payments() {
               <option value="">-- Choose member --</option>
               {members.map(m => (
                 <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
+            </select>
+          </div>
+          {memberId && (
+            <div className="flex gap-4 text-sm">
+              <label className="flex items-center gap-2 text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={!!members.find(m => m.id === memberId)?.survivor_opted_in}
+                  onChange={e => optIn(memberId, 'survivor', e.target.checked)}
+                />
+                Survivor
+              </label>
+              <label className="flex items-center gap-2 text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={!!members.find(m => m.id === memberId)?.chopped_opted_in}
+                  onChange={e => optIn(memberId, 'chopped', e.target.checked)}
+                />
+                Chopped
+              </label>
+            </div>
+          )}
+          <div>
+            <label className="block text-sm text-slate-400 mb-1">League</label>
+            <select
+              className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-100"
+              value={league}
+              onChange={e => {
+                const newLeague = e.target.value;
+                setLeague(newLeague);
+                setAmount(String(LEAGUE_DUES[newLeague]));
+              }}
+            >
+              {Object.keys(LEAGUE_DUES).map(l => (
+                <option key={l} value={l}>{LEAGUE_LABELS[l]}</option>
               ))}
             </select>
           </div>
@@ -141,6 +182,7 @@ export default function Payments() {
                     <th className="py-2">Date</th>
                     <th className="py-2">Owner</th>
                     <th className="py-2">Amount</th>
+                    <th className="py-2">League</th>
                     <th className="py-2">Protocol</th>
                     <th className="py-2">Actions</th>
                   </tr>
@@ -155,6 +197,7 @@ export default function Payments() {
                         <td className="py-3">{p.date}</td>
                         <td className="py-3 font-semibold">{p.member_name}</td>
                         <td className="py-3 text-emerald-400 font-medium">${p.amount}</td>
+                        <td className="py-3"><span className="bg-slate-700 px-2 py-0.5 rounded text-xs capitalize">{p.league}</span></td>
                         <td className="py-3"><span className="bg-slate-700 px-2 py-0.5 rounded text-xs">{p.method}</span></td>
                         <td className="py-3">
                           <button
@@ -170,7 +213,7 @@ export default function Payments() {
                       </tr>
                       {expandedPaymentId === p.id && (
                         <tr className="bg-slate-700/30">
-                          <td colSpan="5" className="py-4 px-6">
+                          <td colSpan="6" className="py-4 px-6">
                             <div className="space-y-2 text-sm">
                               <div className="flex items-start">
                                 <span className="text-slate-400 font-medium w-24">Payment ID:</span>
@@ -183,6 +226,10 @@ export default function Payments() {
                               <div className="flex items-start">
                                 <span className="text-slate-400 font-medium w-24">Amount:</span>
                                 <span className="text-emerald-400 font-semibold">${p.amount}</span>
+                              </div>
+                              <div className="flex items-start">
+                                <span className="text-slate-400 font-medium w-24">League:</span>
+                                <span className="text-slate-300 capitalize">{p.league}</span>
                               </div>
                               <div className="flex items-start">
                                 <span className="text-slate-400 font-medium w-24">Date:</span>
