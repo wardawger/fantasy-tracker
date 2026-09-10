@@ -38,6 +38,11 @@ export const LeagueProvider = ({ children }) => {
     await refreshData();
   };
 
+  const optIn = async (memberId, league, optedIn) => {
+    await axios.post(`${API_BASE}/api/members/${memberId}/opt-in`, { league, optedIn });
+    await refreshData();
+  };
+
   const refreshWeekResults = async (week) => {
     await axios.get(`${API_BASE}/api/refresh/weekly/${week}`);
     await refreshData();
@@ -49,7 +54,7 @@ export const LeagueProvider = ({ children }) => {
 
   return (
     <LeagueContext.Provider value={{
-      members, payments, weekly, loading, refreshData, addPayment, deletePayment, refreshWeekResults
+      members, payments, weekly, loading, refreshData, addPayment, deletePayment, optIn, refreshWeekResults
     }}>
       {children}
     </LeagueContext.Provider>
