@@ -69,7 +69,7 @@ export default function RedraftBonuses() {
           <div className="text-slate-500 italic block py-4 text-center">No weekly results yet. Use Payout Ledger to sync weeks.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
+            <table className="w-full text-left text-sm border-collapse border border-slate-700">
               <thead>
                 <tr className="border-b border-slate-700 text-slate-400 divide-x divide-slate-700">
                   <th className="py-2 px-3 whitespace-nowrap">Week</th>
@@ -106,7 +106,7 @@ export default function RedraftBonuses() {
           Each bonus pays $50 at end of regular season (through Week 14)
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse">
+          <table className="w-full text-left text-sm border-collapse border border-slate-700">
             <thead>
               <tr className="border-b border-slate-700 text-slate-400 divide-x divide-slate-700">
                 <th className="py-2 px-3 whitespace-nowrap">Bonus Category</th>

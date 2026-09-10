@@ -50,7 +50,7 @@ export default function Dashboard() {
       <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
         <h3 className="text-lg font-semibold mb-4 text-emerald-400">Payments Health Summary</h3>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-350 border-collapse">
+          <table className="w-full text-left text-sm text-slate-350 border-collapse border border-slate-700">
             <thead>
               <tr className="border-b border-slate-700 text-slate-400 divide-x divide-slate-700">
                 <SortableTh label="Team Owner" sortKey="name" currentKey={membersSortKey} direction={membersSortDirection} onSort={requestMembersSort} className="px-3" />

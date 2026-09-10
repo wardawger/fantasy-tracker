@@ -233,7 +233,7 @@ export default function Payments() {
             {payments.length === 0 ? (
               <div className="text-slate-500 italic block py-4 text-center">No payment entries found</div>
             ) : (
-              <table className="w-full text-left text-sm border-collapse">
+              <table className="w-full text-left text-sm border-collapse border border-slate-700">
                 <thead>
                   <tr className="border-b border-slate-700 text-slate-400 divide-x divide-slate-700">
                     <SortableTh label="Date" sortKey="date" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} className="px-3" />

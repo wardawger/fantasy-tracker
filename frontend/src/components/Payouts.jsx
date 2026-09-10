@@ -140,7 +140,7 @@ export default function Payouts() {
       <div className="bg-slate-800 p-4 sm:p-6 rounded-lg border border-slate-700">
         <h3 className="font-semibold text-emerald-400 mb-4">Total Balance Ledger</h3>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse">
+          <table className="w-full text-left text-sm border-collapse border border-slate-700">
             <thead>
               <tr className="border-b border-slate-700 text-slate-400 divide-x divide-slate-700">
                 <SortableTh label="Owner Name" sortKey="name" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3" />
