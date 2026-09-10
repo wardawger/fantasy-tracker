@@ -9,6 +9,7 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand"
   },
   "dependencies": {
+    "@libsql/client": "^0.14.0",
     "sql.js": "^1.11.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

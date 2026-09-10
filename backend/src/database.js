@@ -1,31 +1,62 @@
 import initSqlJs from 'sql.js';
+import { createClient } from '@libsql/client';
 import fs from 'fs';
 
-let db = null;
+let handle = null;
+let mode = null; // 'turso' | 'sqljs'
 let SQL = null;
+let sqljsRaw = null;
 
 export async function getDb(dbPath = 'storage.sqlite') {
-  if (!db) {
+  if (handle) return handle;
+
+  if (process.env.TURSO_DATABASE_URL) {
+    mode = 'turso';
+    const client = createClient({
+      url: process.env.TURSO_DATABASE_URL,
+      authToken: process.env.TURSO_AUTH_TOKEN
+    });
+
+    handle = {
+      async run(sql, params = []) {
+        await client.execute({ sql, args: params });
+      },
+      async exec(sql, params = []) {
+        const rs = await client.execute({ sql, args: params });
+        if (!rs.rows.length) return [];
+        const values = rs.rows.map(row => rs.columns.map(col => row[col]));
+        return [{ columns: rs.columns, values }];
+      }
+    };
+  } else {
+    mode = 'sqljs';
     if (!SQL) {
       SQL = await initSqlJs();
     }
 
-    // Load existing database or create new one
     if (fs.existsSync(dbPath)) {
-      const buffer = fs.readFileSync(dbPath);
-      db = new SQL.Database(buffer);
+      sqljsRaw = new SQL.Database(fs.readFileSync(dbPath));
     } else {
-      db = new SQL.Database();
+      sqljsRaw = new SQL.Database();
     }
+    sqljsRaw.dbPath = dbPath;
 
-    db.dbPath = dbPath;
-    initDB(db);
+    handle = {
+      async run(sql, params = []) {
+        sqljsRaw.run(sql, params);
+      },
+      async exec(sql, params = []) {
+        return sqljsRaw.exec(sql, params);
+      }
+    };
   }
-  return db;
+
+  await initDB(handle);
+  return handle;
 }
 
-function initDB(sqliteDb) {
-  sqliteDb.run(`
+async function initDB(db) {
+  await db.run(`
     CREATE TABLE IF NOT EXISTS members (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -35,7 +66,7 @@ function initDB(sqliteDb) {
     );
   `);
 
-  sqliteDb.run(`
+  await db.run(`
     CREATE TABLE IF NOT EXISTS payments (
       id TEXT PRIMARY KEY,
       member_id TEXT NOT NULL,
@@ -47,7 +78,7 @@ function initDB(sqliteDb) {
     );
   `);
 
-  sqliteDb.run(`
+  await db.run(`
     CREATE TABLE IF NOT EXISTS weekly_results (
       id TEXT PRIMARY KEY,
       league TEXT NOT NULL,
@@ -65,7 +96,7 @@ function initDB(sqliteDb) {
     );
   `);
 
-  sqliteDb.run(`
+  await db.run(`
     CREATE TABLE IF NOT EXISTS league_champions (
       league TEXT PRIMARY KEY,
       winner_user_id TEXT,
@@ -76,14 +107,14 @@ function initDB(sqliteDb) {
     );
   `);
 
-  addColumnIfMissing(sqliteDb, 'payments', 'league', "TEXT NOT NULL DEFAULT 'main'");
-  addColumnIfMissing(sqliteDb, 'members', 'survivor_opted_in', 'INTEGER NOT NULL DEFAULT 0');
-  addColumnIfMissing(sqliteDb, 'members', 'chopped_opted_in', 'INTEGER NOT NULL DEFAULT 0');
+  await addColumnIfMissing(db, 'payments', 'league', "TEXT NOT NULL DEFAULT 'main'");
+  await addColumnIfMissing(db, 'members', 'survivor_opted_in', 'INTEGER NOT NULL DEFAULT 0');
+  await addColumnIfMissing(db, 'members', 'chopped_opted_in', 'INTEGER NOT NULL DEFAULT 0');
 }
 
-function addColumnIfMissing(sqliteDb, table, column, definition) {
+async function addColumnIfMissing(db, table, column, definition) {
   try {
-    sqliteDb.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+    await db.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
   } catch (err) {
     if (!/duplicate column name/i.test(err.message)) {
       throw err;
@@ -92,16 +123,19 @@ function addColumnIfMissing(sqliteDb, table, column, definition) {
 }
 
 export function saveDb() {
-  if (db && db.dbPath) {
-    const data = db.export();
-    fs.writeFileSync(db.dbPath, data);
+  if (mode === 'sqljs' && sqljsRaw && sqljsRaw.dbPath) {
+    const data = sqljsRaw.export();
+    fs.writeFileSync(sqljsRaw.dbPath, data);
   }
+  // Turso commits each statement as it runs; nothing to flush.
 }
 
 export function closeDb() {
-  if (db) {
+  if (mode === 'sqljs' && sqljsRaw) {
     saveDb();
-    db.close();
-    db = null;
+    sqljsRaw.close();
   }
+  handle = null;
+  mode = null;
+  sqljsRaw = null;
 }
