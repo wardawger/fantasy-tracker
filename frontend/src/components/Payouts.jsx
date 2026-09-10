@@ -14,9 +14,12 @@ function VenmoPayButton({ username, amount, note }) {
       href={venmoPayLink(username, amount, note)}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-block bg-emerald-500 hover:bg-emerald-600 font-semibold px-2 py-0.5 rounded text-slate-900 text-xs ml-2"
+      className="inline-flex items-center gap-1 bg-[#3D95CE] hover:bg-[#3483B5] font-semibold px-2.5 py-1 rounded text-white text-xs ml-2"
     >
-      Pay via Venmo
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+        <path d="M20.6 3.2c.7 1.2 1 2.4 1 4 0 5-4.3 11.5-7.7 16.1H6.4L3.3 4.4l6.2-.6 1.6 13.2c1.5-2.5 3.4-6.4 3.4-9 0-1.5-.3-2.5-.7-3.3z"/>
+      </svg>
+      Pay with Venmo
     </a>
   );
 }
