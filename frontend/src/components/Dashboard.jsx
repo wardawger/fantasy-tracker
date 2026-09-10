@@ -50,20 +50,20 @@ export default function Dashboard() {
       <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
         <h3 className="text-lg font-semibold mb-4 text-emerald-400">Payments Health Summary</h3>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-350">
+          <table className="w-full text-left text-sm text-slate-350 border-collapse">
             <thead>
-              <tr className="border-b border-slate-700 text-slate-400">
-                <SortableTh label="Team Owner" sortKey="name" currentKey={membersSortKey} direction={membersSortDirection} onSort={requestMembersSort} />
-                <SortableTh label="Dues Status ($250)" sortKey="total_paid" currentKey={membersSortKey} direction={membersSortDirection} onSort={requestMembersSort} />
-                <SortableTh label="Survivor ($50)" sortKey="survivor_paid" currentKey={membersSortKey} direction={membersSortDirection} onSort={requestMembersSort} />
-                <SortableTh label="Chopped ($25)" sortKey="chopped_paid" currentKey={membersSortKey} direction={membersSortDirection} onSort={requestMembersSort} />
+              <tr className="border-b border-slate-700 text-slate-400 divide-x divide-slate-700">
+                <SortableTh label="Team Owner" sortKey="name" currentKey={membersSortKey} direction={membersSortDirection} onSort={requestMembersSort} className="px-3" />
+                <SortableTh label="Dues Status ($250)" sortKey="total_paid" currentKey={membersSortKey} direction={membersSortDirection} onSort={requestMembersSort} className="px-3" />
+                <SortableTh label="Survivor ($50)" sortKey="survivor_paid" currentKey={membersSortKey} direction={membersSortDirection} onSort={requestMembersSort} className="px-3" />
+                <SortableTh label="Chopped ($25)" sortKey="chopped_paid" currentKey={membersSortKey} direction={membersSortDirection} onSort={requestMembersSort} className="px-3" />
               </tr>
             </thead>
             <tbody>
               {sortedMembers.map(m => (
-                <tr key={m.id} className="border-b border-slate-800">
-                  <td className="py-3 font-semibold">{m.name}</td>
-                  <td className="py-3">
+                <tr key={m.id} className="border-b border-slate-800 divide-x divide-slate-800">
+                  <td className="py-3 px-3 font-semibold whitespace-nowrap">{m.name}</td>
+                  <td className="py-3 px-3 whitespace-nowrap">
                     {m.total_paid >= 250 ? (
                       <span className="bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full text-xs font-medium">Fully Paid</span>
                     ) : m.total_paid > 0 ? (
@@ -72,8 +72,8 @@ export default function Dashboard() {
                       <span className="bg-red-500/20 text-red-400 px-2.5 py-0.5 rounded-full text-xs font-medium">Unpaid</span>
                     )}
                   </td>
-                  <td className="py-3"><LeagueStatusBadge member={m} league="survivor" /></td>
-                  <td className="py-3"><LeagueStatusBadge member={m} league="chopped" /></td>
+                  <td className="py-3 px-3 whitespace-nowrap"><LeagueStatusBadge member={m} league="survivor" /></td>
+                  <td className="py-3 px-3 whitespace-nowrap"><LeagueStatusBadge member={m} league="chopped" /></td>
                 </tr>
               ))}
             </tbody>

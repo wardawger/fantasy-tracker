@@ -229,34 +229,34 @@ export default function Payments() {
 
         <div className="lg:col-span-2 bg-slate-800 p-6 rounded-lg border border-slate-700">
           <h3 className="font-semibold text-emerald-400 mb-4">Dues payment history</h3>
-          <div className="overflow-y-auto max-h-[500px]">
+          <div className="overflow-y-auto overflow-x-auto max-h-[500px]">
             {payments.length === 0 ? (
               <div className="text-slate-500 italic block py-4 text-center">No payment entries found</div>
             ) : (
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-left text-sm border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-700 text-slate-400">
-                    <SortableTh label="Date" sortKey="date" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} />
-                    <SortableTh label="Owner" sortKey="member_name" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} />
-                    <SortableTh label="Amount" sortKey="amount" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} />
-                    <SortableTh label="League" sortKey="league" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} />
-                    <SortableTh label="Protocol" sortKey="method" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} />
-                    <th className="py-2">Actions</th>
+                  <tr className="border-b border-slate-700 text-slate-400 divide-x divide-slate-700">
+                    <SortableTh label="Date" sortKey="date" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} className="px-3" />
+                    <SortableTh label="Owner" sortKey="member_name" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} className="px-3" />
+                    <SortableTh label="Amount" sortKey="amount" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} className="px-3" />
+                    <SortableTh label="League" sortKey="league" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} className="px-3" />
+                    <SortableTh label="Protocol" sortKey="method" currentKey={paymentsSortKey} direction={paymentsSortDirection} onSort={requestPaymentsSort} className="px-3" />
+                    <th className="py-2 px-3 whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sortedPayments.map(p => (
                     <React.Fragment key={p.id}>
                       <tr
-                        className="border-b border-slate-800 hover:bg-slate-700/50 cursor-pointer transition"
+                        className="border-b border-slate-800 divide-x divide-slate-800 hover:bg-slate-700/50 cursor-pointer transition"
                         onClick={() => setExpandedPaymentId(expandedPaymentId === p.id ? null : p.id)}
                       >
-                        <td className="py-3">{p.date}</td>
-                        <td className="py-3 font-semibold">{p.member_name}</td>
-                        <td className="py-3 text-emerald-400 font-medium">${p.amount}</td>
-                        <td className="py-3"><span className="bg-slate-700 px-2 py-0.5 rounded text-xs capitalize">{p.league}</span></td>
-                        <td className="py-3"><span className="bg-slate-700 px-2 py-0.5 rounded text-xs">{p.method}</span></td>
-                        <td className="py-3">
+                        <td className="py-3 px-3 whitespace-nowrap">{p.date}</td>
+                        <td className="py-3 px-3 font-semibold whitespace-nowrap">{p.member_name}</td>
+                        <td className="py-3 px-3 text-emerald-400 font-medium whitespace-nowrap">${p.amount}</td>
+                        <td className="py-3 px-3 whitespace-nowrap"><span className="bg-slate-700 px-2 py-0.5 rounded text-xs capitalize">{p.league}</span></td>
+                        <td className="py-3 px-3 whitespace-nowrap"><span className="bg-slate-700 px-2 py-0.5 rounded text-xs">{p.method}</span></td>
+                        <td className="py-3 px-3 whitespace-nowrap">
                           <button
                             className="text-emerald-400 hover:text-emerald-300 hover:underline mr-3"
                             onClick={(e) => { e.stopPropagation(); startEdit(p); setExpandedPaymentId(p.id); }}

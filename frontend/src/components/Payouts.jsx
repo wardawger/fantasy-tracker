@@ -140,30 +140,30 @@ export default function Payouts() {
       <div className="bg-slate-800 p-4 sm:p-6 rounded-lg border border-slate-700">
         <h3 className="font-semibold text-emerald-400 mb-4">Total Balance Ledger</h3>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-sm border-collapse">
             <thead>
-              <tr className="border-b border-slate-700 text-slate-400">
-                <SortableTh label="Owner Name" sortKey="name" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="pr-4" />
-                <SortableTh label="Dues Paid" sortKey="paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="pr-4" />
-                <SortableTh label="Weekly Earnings" sortKey="weeklyEarned" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="pr-4" />
-                <SortableTh label="Net Balance" sortKey="netTotal" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="pr-4" />
-                <SortableTh label="Survivor ($50)" sortKey="survivor_paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="pr-4" />
-                <SortableTh label="Chopped ($25)" sortKey="chopped_paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} />
+              <tr className="border-b border-slate-700 text-slate-400 divide-x divide-slate-700">
+                <SortableTh label="Owner Name" sortKey="name" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3" />
+                <SortableTh label="Dues Paid" sortKey="paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3" />
+                <SortableTh label="Weekly Earnings" sortKey="weeklyEarned" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3" />
+                <SortableTh label="Net Balance" sortKey="netTotal" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3" />
+                <SortableTh label="Survivor ($50)" sortKey="survivor_paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3" />
+                <SortableTh label="Chopped ($25)" sortKey="chopped_paid" currentKey={payoutsSortKey} direction={payoutsSortDirection} onSort={requestPayoutsSort} className="px-3" />
               </tr>
             </thead>
             <tbody>
               {sortedPayouts.map(cp => (
-                <tr key={cp.id} className="border-b border-slate-800">
-                  <td className="py-3 pr-4 font-semibold whitespace-nowrap">{cp.name}</td>
-                  <td className="py-3 pr-4 text-slate-305 whitespace-nowrap">${cp.paid}</td>
-                  <td className="py-3 pr-4 text-emerald-400 font-medium whitespace-nowrap">${cp.weeklyEarned}</td>
-                  <td className="py-2 pr-4 whitespace-nowrap">
+                <tr key={cp.id} className="border-b border-slate-800 divide-x divide-slate-800">
+                  <td className="py-3 px-3 font-semibold whitespace-nowrap">{cp.name}</td>
+                  <td className="py-3 px-3 text-slate-305 whitespace-nowrap">${cp.paid}</td>
+                  <td className="py-3 px-3 text-emerald-400 font-medium whitespace-nowrap">${cp.weeklyEarned}</td>
+                  <td className="py-2 px-3 whitespace-nowrap">
                     <span className={`px-2.5 py-0.5 rounded text-xs font-semibold ${cp.netTotal >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-450'}`}>
                       ${cp.netTotal.toFixed(2)}
                     </span>
                   </td>
-                  <td className="py-3 pr-4 whitespace-nowrap"><LeagueStatusBadge member={cp} league="survivor" /></td>
-                  <td className="py-3 whitespace-nowrap"><LeagueStatusBadge member={cp} league="chopped" /></td>
+                  <td className="py-3 px-3 whitespace-nowrap"><LeagueStatusBadge member={cp} league="survivor" /></td>
+                  <td className="py-3 px-3 whitespace-nowrap"><LeagueStatusBadge member={cp} league="chopped" /></td>
                 </tr>
               ))}
             </tbody>

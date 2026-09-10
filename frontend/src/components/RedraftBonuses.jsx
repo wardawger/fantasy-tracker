@@ -53,14 +53,14 @@ export default function RedraftBonuses() {
   }, [members, weekly]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-8">
+      <div className="flex flex-wrap justify-between items-center gap-2">
         <h2 className="text-2xl font-bold text-emerald-400">Redraft League Bonuses</h2>
         <div className="text-sm text-slate-400">Updated through Week {weekly.length > 0 ? Math.max(...weekly.map(w => w.week)) : 0}</div>
       </div>
 
       {/* Weekly Winners Table */}
-      <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
+      <div className="bg-slate-800 p-4 sm:p-6 rounded-lg border border-slate-700">
         <h3 className="font-semibold text-emerald-400 mb-4">Weekly Payouts (Weeks 1-14)</h3>
         <div className="text-sm text-slate-400 mb-4">
           First place each week: $17 | Second place each week: $8
@@ -69,28 +69,28 @@ export default function RedraftBonuses() {
           <div className="text-slate-500 italic block py-4 text-center">No weekly results yet. Use Payout Ledger to sync weeks.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm border-collapse">
               <thead>
-                <tr className="border-b border-slate-700 text-slate-400">
-                  <th className="py-2">Week</th>
-                  <th className="py-2">1st Place</th>
-                  <th className="py-2">Score</th>
-                  <th className="py-2">Payout</th>
-                  <th className="py-2">2nd Place</th>
-                  <th className="py-2">Score</th>
-                  <th className="py-2">Payout</th>
+                <tr className="border-b border-slate-700 text-slate-400 divide-x divide-slate-700">
+                  <th className="py-2 px-3 whitespace-nowrap">Week</th>
+                  <th className="py-2 px-3 whitespace-nowrap">1st Place</th>
+                  <th className="py-2 px-3 whitespace-nowrap">Score</th>
+                  <th className="py-2 px-3 whitespace-nowrap">Payout</th>
+                  <th className="py-2 px-3 whitespace-nowrap">2nd Place</th>
+                  <th className="py-2 px-3 whitespace-nowrap">Score</th>
+                  <th className="py-2 px-3 whitespace-nowrap">Payout</th>
                 </tr>
               </thead>
               <tbody>
                 {weekly.sort((a, b) => a.week - b.week).map(w => (
-                  <tr key={w.id} className="border-b border-slate-800">
-                    <td className="py-3 font-semibold">Week {w.week}</td>
-                    <td className="py-3 text-emerald-400">{w.first_name}</td>
-                    <td className="py-3">{w.first_points.toFixed(2)}</td>
-                    <td className="py-3 text-emerald-400 font-medium">${w.first_payout}</td>
-                    <td className="py-3 text-slate-300">{w.second_name}</td>
-                    <td className="py-3">{w.second_points.toFixed(2)}</td>
-                    <td className="py-3 text-slate-300 font-medium">${w.second_payout}</td>
+                  <tr key={w.id} className="border-b border-slate-800 divide-x divide-slate-800">
+                    <td className="py-3 px-3 font-semibold whitespace-nowrap">Week {w.week}</td>
+                    <td className="py-3 px-3 text-emerald-400 whitespace-nowrap">{w.first_name}</td>
+                    <td className="py-3 px-3 whitespace-nowrap">{w.first_points.toFixed(2)}</td>
+                    <td className="py-3 px-3 text-emerald-400 font-medium whitespace-nowrap">${w.first_payout}</td>
+                    <td className="py-3 px-3 text-slate-300 whitespace-nowrap">{w.second_name}</td>
+                    <td className="py-3 px-3 whitespace-nowrap">{w.second_points.toFixed(2)}</td>
+                    <td className="py-3 px-3 text-slate-300 font-medium whitespace-nowrap">${w.second_payout}</td>
                   </tr>
                 ))}
               </tbody>
@@ -100,77 +100,77 @@ export default function RedraftBonuses() {
       </div>
 
       {/* Season Bonus Leaders Table */}
-      <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
+      <div className="bg-slate-800 p-4 sm:p-6 rounded-lg border border-slate-700">
         <h3 className="font-semibold text-emerald-400 mb-4">Season Bonus Leaders</h3>
         <div className="text-sm text-slate-400 mb-4">
           Each bonus pays $50 at end of regular season (through Week 14)
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-sm border-collapse">
             <thead>
-              <tr className="border-b border-slate-700 text-slate-400">
-                <th className="py-2">Bonus Category</th>
-                <th className="py-2">Current Leader</th>
-                <th className="py-2">Record/Score</th>
-                <th className="py-2">Payout</th>
-                <th className="py-2">Status</th>
+              <tr className="border-b border-slate-700 text-slate-400 divide-x divide-slate-700">
+                <th className="py-2 px-3 whitespace-nowrap">Bonus Category</th>
+                <th className="py-2 px-3 whitespace-nowrap">Current Leader</th>
+                <th className="py-2 px-3 whitespace-nowrap">Record/Score</th>
+                <th className="py-2 px-3 whitespace-nowrap">Payout</th>
+                <th className="py-2 px-3 whitespace-nowrap">Status</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-slate-800">
-                <td className="py-3 font-semibold">Best Regular Season Record</td>
-                <td className="py-3 text-slate-400 italic">TBD - standings not synced</td>
-                <td className="py-3">-</td>
-                <td className="py-3 text-emerald-400 font-medium">$50</td>
-                <td className="py-3">
-                  <span className="bg-yellow-500/20 text-yellow-400 px-2.5 py-0.5 rounded-full text-xs font-medium">Pending</span>
+              <tr className="border-b border-slate-800 divide-x divide-slate-800">
+                <td className="py-3 px-3 font-semibold whitespace-nowrap">Best Regular Season Record</td>
+                <td className="py-3 px-3 text-slate-400 italic whitespace-nowrap">TBD - standings not synced</td>
+                <td className="py-3 px-3 whitespace-nowrap">-</td>
+                <td className="py-3 px-3 text-emerald-400 font-medium whitespace-nowrap">$50</td>
+                <td className="py-3 px-3 whitespace-nowrap">
+                  <span className="bg-yellow-500/20 text-yellow-400 px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">Pending</span>
                 </td>
               </tr>
-              <tr className="border-b border-slate-800">
-                <td className="py-3 font-semibold">Highest Single Week Score</td>
-                <td className="py-3">
+              <tr className="border-b border-slate-800 divide-x divide-slate-800">
+                <td className="py-3 px-3 font-semibold whitespace-nowrap">Highest Single Week Score</td>
+                <td className="py-3 px-3 whitespace-nowrap">
                   {bonusLeaders.highestWeekScore ? (
                     <span className="text-emerald-400">{bonusLeaders.highestWeekScore.name}</span>
                   ) : (
                     <span className="text-slate-400 italic">No data yet</span>
                   )}
                 </td>
-                <td className="py-3">
+                <td className="py-3 px-3 whitespace-nowrap">
                   {bonusLeaders.highestWeekScore ? (
                     <>
                       {bonusLeaders.highestWeekScore.points.toFixed(2)} pts <span className="text-slate-500">(Week {bonusLeaders.highestWeekScore.week})</span>
                     </>
                   ) : '-'}
                 </td>
-                <td className="py-3 text-emerald-400 font-medium">$50</td>
-                <td className="py-3">
+                <td className="py-3 px-3 text-emerald-400 font-medium whitespace-nowrap">$50</td>
+                <td className="py-3 px-3 whitespace-nowrap">
                   {bonusLeaders.highestWeekScore ? (
-                    <span className="bg-yellow-500/20 text-yellow-400 px-2.5 py-0.5 rounded-full text-xs font-medium">Current Leader</span>
+                    <span className="bg-yellow-500/20 text-yellow-400 px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">Leading</span>
                   ) : (
-                    <span className="bg-slate-500/20 text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium">No Data</span>
+                    <span className="bg-slate-500/20 text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">No Data</span>
                   )}
                 </td>
               </tr>
-              <tr className="border-b border-slate-800">
-                <td className="py-3 font-semibold">Most Total Season Points</td>
-                <td className="py-3">
+              <tr className="border-b border-slate-800 divide-x divide-slate-800">
+                <td className="py-3 px-3 font-semibold whitespace-nowrap">Most Total Season Points</td>
+                <td className="py-3 px-3 whitespace-nowrap">
                   {bonusLeaders.seasonPointsLeader && bonusLeaders.seasonPointsLeader.totalPoints > 0 ? (
                     <span className="text-emerald-400">{bonusLeaders.seasonPointsLeader.name}</span>
                   ) : (
                     <span className="text-slate-400 italic">No data yet</span>
                   )}
                 </td>
-                <td className="py-3">
+                <td className="py-3 px-3 whitespace-nowrap">
                   {bonusLeaders.seasonPointsLeader && bonusLeaders.seasonPointsLeader.totalPoints > 0
                     ? `${bonusLeaders.seasonPointsLeader.totalPoints.toFixed(2)} pts`
                     : '-'}
                 </td>
-                <td className="py-3 text-emerald-400 font-medium">$50</td>
-                <td className="py-3">
+                <td className="py-3 px-3 text-emerald-400 font-medium whitespace-nowrap">$50</td>
+                <td className="py-3 px-3 whitespace-nowrap">
                   {bonusLeaders.seasonPointsLeader && bonusLeaders.seasonPointsLeader.totalPoints > 0 ? (
-                    <span className="bg-yellow-500/20 text-yellow-400 px-2.5 py-0.5 rounded-full text-xs font-medium">Current Leader</span>
+                    <span className="bg-yellow-500/20 text-yellow-400 px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">Leading</span>
                   ) : (
-                    <span className="bg-slate-500/20 text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium">No Data</span>
+                    <span className="bg-slate-500/20 text-slate-400 px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">No Data</span>
                   )}
                 </td>
               </tr>
