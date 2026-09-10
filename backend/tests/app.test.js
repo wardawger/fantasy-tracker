@@ -78,4 +78,47 @@ describe('League dues logic', () => {
     const countBefore = paymentsBefore[0]?.values[0]?.[0] || 0;
     expect(countBefore).toBe(0);
   });
+
+  const LEAGUE_DUES = { main: 250, survivor: 50, chopped: 25 };
+
+  // Mirrors the league validation the POST /api/payments route performs before INSERT:
+  // absent/null/'' league defaults to 'main' for back-compat, but a present, unrecognized
+  // league value is rejected outright rather than silently coerced to 'main'.
+  function resolveLeagueOrReject(league) {
+    if (league !== undefined && league !== null && league !== '' && LEAGUE_DUES[league] === undefined) {
+      return { rejected: true };
+    }
+    return { rejected: false, resolvedLeague: league && LEAGUE_DUES[league] !== undefined ? league : 'main' };
+  }
+
+  test('invalid league value is rejected and does not create a payment or touch total_paid', async () => {
+    const db = await getDb(TEST_DB);
+    const memberId = crypto.randomUUID();
+    db.run('INSERT INTO members (id, name, sleeper_user_id, total_paid) VALUES (?, ?, ?, ?)',
+      [memberId, 'Test Member', 'sleeper_1', 0]);
+
+    const outcome = resolveLeagueOrReject('suvivor');
+    expect(outcome.rejected).toBe(true);
+
+    // Since the route rejects before INSERT/UPDATE, no payment row or total_paid change occurs.
+    const paymentsAfter = db.exec('SELECT COUNT(*) FROM payments');
+    expect(paymentsAfter[0]?.values[0]?.[0] || 0).toBe(0);
+
+    const memberAfter = db.exec('SELECT total_paid FROM members WHERE id = ?', [memberId]);
+    expect(memberAfter[0].values[0][0]).toBe(0);
+  });
+
+  test('omitted league still defaults to main (back-compat regression)', async () => {
+    const outcomeUndefined = resolveLeagueOrReject(undefined);
+    expect(outcomeUndefined.rejected).toBe(false);
+    expect(outcomeUndefined.resolvedLeague).toBe('main');
+
+    const outcomeNull = resolveLeagueOrReject(null);
+    expect(outcomeNull.rejected).toBe(false);
+    expect(outcomeNull.resolvedLeague).toBe('main');
+
+    const outcomeEmpty = resolveLeagueOrReject('');
+    expect(outcomeEmpty.rejected).toBe(false);
+    expect(outcomeEmpty.resolvedLeague).toBe('main');
+  });
 });

@@ -94,6 +94,11 @@ app.post('/api/members/:id/opt-in', async (req, res) => {
 
 app.post('/api/payments', async (req, res) => {
   const { memberId, amount, date, method, notes, league } = req.body;
+
+  if (league !== undefined && league !== null && league !== '' && LEAGUE_DUES[league] === undefined) {
+    return res.status(400).json({ error: 'league must be main, survivor, or chopped' });
+  }
+
   const resolvedLeague = league && LEAGUE_DUES[league] !== undefined ? league : 'main';
   const db = await getDb();
 
